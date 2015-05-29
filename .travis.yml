@@ -1,0 +1,44 @@
+addons:
+  apt:
+    packages:
+    - libsndfile1-dev
+    - wget
+    - libblas-dev
+    - libblas3
+    - liblapack-dev
+    - liblapack3
+
+before_install:
+    - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+    - chmod +x miniconda.sh
+    - ./miniconda.sh -b
+    - export PATH=/home/travis/miniconda/bin:$PATH
+    - conda update --yes conda
+
+language: python
+python: 
+    - "2.7"
+
+install:
+    - echo $LD_LIBRARY_PATH
+    - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
+    - source activate test
+      # we use conda to prevent compiling big packages
+    - wget http://www.mega-nerd.com/libsndfile/files/libsndfile-1.0.25.tar.gz
+    - tar xvzf libsndfile-1.0.25.tar.gz
+    - cd libsndfile-1.0.25
+    - ./configure --prefix /home/travis/miniconda/envs/test/
+    - make 
+    - make install
+    - ls -lah /home/travis/miniconda/envs/test/
+    - cd ..
+    - conda install --yes nose numpy scipy scikit-learn numexpr pillow matplotlib basemap docutils pip pandas scikit-learn
+    - echo "CONDA DONE"
+    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib 
+    - echo $LD_LIBRARY_PATH
+    - pip install -r requirements.txt
+    - echo $LD_LIBRARY_PATH
+    - python setup.py develop --user
+
+script:
+    - "nosetests -w tests/ -v"
