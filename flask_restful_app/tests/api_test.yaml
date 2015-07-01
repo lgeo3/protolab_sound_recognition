@@ -1,0 +1,10 @@
+---
+- config:
+    - testset: "Quickstart app tests"
+
+- test:
+    - group: "Quickstart"
+    - name: "Create a new sound file"
+    - url: "/api/SendSoundFile"
+    - method: "POST"
+    - body: '{"audio_file": "JUST A BUNCH OF DATACHUNK....trseiat moiaersn toianr sointo anrso", "content_classification": "Test"}'
