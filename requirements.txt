@@ -7,4 +7,5 @@ Flask==0.10.1
 Flask-RESTful==0.3.3
 Flask-SQLAlchemy==2.0
 pandas>=0.13.0
+aniso8601
 -e git+git://github.com/jameslyons/python_speech_features.git#egg=speech-features
