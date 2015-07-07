@@ -29,8 +29,7 @@ def _generate_humavips_dataset(glob_file_pattern="/mnt/protolab_server/media/sou
     return res
 
 
-def _generate_aldebaran_dataset(glob_file_pattern="/mnt/protolab_innov/data/sounds/dataset/*.wav", nfft=1024):
-    files = glob.glob(glob_file_pattern)
+def _generate_aldebaran_dataset(files, nfft=1024, expected_fs=48000):
     assert(files!=[])
 
     res = []
@@ -40,6 +39,9 @@ def _generate_aldebaran_dataset(glob_file_pattern="/mnt/protolab_innov/data/soun
             data['file_path'], data['file_name'] = os.path.split(f)
             data['expected_class'] = data['file_name'].split('-')[0]
             signal, fs = load_sound(f)
+            if fs!=expected_fs:
+                print("warning file %s, wrong fs %s, using it.. please remove the file if you don't want" % (f, fs))
+                #continue
             data['features'] = extract_mfcc_features_one_channel(signal, nfft=nfft)
             res.append(data)
         except Exception as e:
@@ -54,8 +56,8 @@ def generate_humavips_dataset(glob_file_pattern="/mnt/protolab_server/media/soun
     df['features'] = df['features'].apply(lambda x : _flatten_features_dict(x))
     return df
 
-def generate_aldebaran_dataset(glob_file_pattern="/mnt/protolab_innov/data/sounds/dataset/*.wav"):
-    dict_with_features = _generate_aldebaran_dataset(glob_file_pattern=glob_file_pattern)
+def generate_aldebaran_dataset(files, nfft=1024):
+    dict_with_features = _generate_aldebaran_dataset(files)
     df = pd.DataFrame(dict_with_features)
     df['features'] = df['features'].apply(lambda x : _flatten_features_dict(x))
     return df

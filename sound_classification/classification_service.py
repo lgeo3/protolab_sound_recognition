@@ -4,11 +4,12 @@ Main file for online classification service
 """
 __author__ = 'lgeorge'
 
+from collections import namedtuple
 from sklearn import preprocessing
+import glob
 import sklearn
 import sklearn.feature_extraction
 import sklearn.svm
-from collections import namedtuple
 
 from sklearn_pandas import DataFrameMapper
 import numpy as np
@@ -30,6 +31,8 @@ def get_confidence_prediction(clf, val):
     """
     return np.max(clf.predict_proba(val))
 
+class SoundClassificationException(Exception):
+    pass
 
 class SoundClassification(object):
     """
@@ -37,27 +40,30 @@ class SoundClassification(object):
     and classify a new file
     """
 
-    def __init__(self, wav_file_pattern=None, clf = None, confidence_threshold=0.2):
+    def __init__(self, wav_file_list=None, clf = None, confidence_threshold=0.2):
         """
 
-        :param wav_file_pattern: , each files should be named  # TODO : replace that with a list of namedTuple (file, class) for example ?
+        :param wav_file_list: , each files should be named  # TODO : replace that with a list of namedTuple (file, class) for example ?
         :param clf: default is SVC with rbf kernel
         :param confidence_threshold:
         :return:
         """
-        if wav_file_pattern is None:
-            wav_file_pattern = '/mnt/protolab_innov/data/sounds/dataset/*.wav'
+        if wav_file_list is None:
+            wav_file_list = glob.glob('/mnt/protolab_innov/data/sounds/dataset/*.wav')
         if clf is None:
+            # TODO : try with linearSVC .. and one vs all
             clf = sklearn.svm.SVC(kernel='rbf', probability=True, verbose=False)
         self.to_sklearn_features = DataFrameMapper([('features', sklearn.feature_extraction.DictVectorizer())])
         self.scaler = None  # init during learn
-        self.wav_file_pattern = wav_file_pattern
+        self.wav_file_list = wav_file_list
+        self.nfft = 1024
+        self.fs = 48000.  # for now we force it .. TODO
 
         self.clf = clf
         self.confidence_threshold = confidence_threshold
 
     def learn(self):
-        self.df = generate_aldebaran_dataset(glob_file_pattern=self.wav_file_pattern)
+        self.df = generate_aldebaran_dataset(self.wav_file_list, nfft=self.nfft)
         self._learning_data_X = self.to_sklearn_features.fit_transform(self.df)
         self._learning_data_Y = self.df.expected_class
 
@@ -67,11 +73,12 @@ class SoundClassification(object):
 
         self.clf.fit(self._learning_data_X_scaled, self._learning_data_Y)
 
-    def processed_signal(self, data=None, fs=48000.):
+    def processed_signal(self, data=None, fs=48000., window_block=1.0):
         """
-
         :param data:
         :param fs:
+        :param window_block: duration of window block to use, default : 1.0 second, if None, the full signal is used as
+        one big window
         :return: list of ClassificationResult namedtuple
         """
 
@@ -80,13 +87,14 @@ class SoundClassification(object):
         assert(data.size != 0)
 
         res = []
-        block_size = min(1 * fs, data.size)
-        overlap = block_size >> 1  # int(block_size / 2)
-        # fs is 48000  Hz for now
-        nfft = 1024
+        if window_block is None:
+            block_size = data.size
+        else:
+            block_size = min(window_block * fs, data.size)
+        overlap = int(block_size) >> 1  # int(block_size / 2)
 
         for num, signal in enumerate(segment_axis(data, block_size, overlap=overlap, end='cut')):
-            preprocessed_features = get_features(signal, nfft=nfft, scaler=self.scaler)
+            preprocessed_features = get_features(signal, nfft=self.nfft, scaler=self.scaler)
             confidence = get_confidence_prediction(self.clf, preprocessed_features)
             if confidence > self.confidence_threshold:
                 class_predicted = self.clf.predict(preprocessed_features)[0]   # [0] : as asked by Alex we return only class in string not an np.array
@@ -96,11 +104,13 @@ class SoundClassification(object):
                 res.append(new_result)
         return res
 
-    def processed_wav(self, filename):
+    def processed_wav(self, filename, window_block=1.0, ignore_fs=False):
         data, fs = sound_processing.io_sound.load_sound(filename)
+        if not(ignore_fs) and fs != self.fs:
+            raise(SoundClassificationException('fs (%s) != self.fs (%s)' % (fs, self.fs)))
         if len(data.shape) > 1:
             data = data[:, 0]
-        return self.processed_signal(data=data, fs=fs)
+        return self.processed_signal(data=data, fs=fs, window_block=window_block)
 
 
 def main():

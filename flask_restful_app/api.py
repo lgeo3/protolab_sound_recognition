@@ -53,7 +53,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print("args is %s" % args)
-    api.sound_classification_obj = SoundClassification(wav_file_pattern=args.wav_file_pattern)
+    api.sound_classification_obj = SoundClassification(wav_file_list=args.wav_file_pattern)
     api.sound_classification_obj.learn()
 
     app.run(debug=True, host='0.0.0.0')
