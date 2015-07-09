@@ -29,8 +29,9 @@ def _generate_humavips_dataset(glob_file_pattern="/mnt/protolab_server/media/sou
     return res
 
 
-def _generate_aldebaran_dataset(files, nfft=1024, expected_fs=48000):
+def _generate_aldebaran_dataset(files, nfft=1024, expected_fs=48000, window_block=None):
     assert(files!=[])
+
 
     res = []
     for num, f in enumerate(files):
@@ -42,8 +43,10 @@ def _generate_aldebaran_dataset(files, nfft=1024, expected_fs=48000):
             if fs!=expected_fs:
                 print("warning file %s, wrong fs %s, using it.. please remove the file if you don't want" % (f, fs))
                 #continue
-            data['features'] = extract_mfcc_features_one_channel(signal, nfft=nfft)
-            res.append(data)
+
+            for frame_feature in extract_mfcc_features_one_channel(signal, nfft=nfft, window_block=window_block):
+                data['features'] = frame_feature
+                res.append(data)
         except Exception as e:
             print("ERROR on %s" % f)
             print(traceback.format_exc())
@@ -56,8 +59,8 @@ def generate_humavips_dataset(glob_file_pattern="/mnt/protolab_server/media/soun
     df['features'] = df['features'].apply(lambda x : _flatten_features_dict(x))
     return df
 
-def generate_aldebaran_dataset(files, nfft=1024):
-    dict_with_features = _generate_aldebaran_dataset(files)
+def generate_aldebaran_dataset(files, nfft=1024, window_block=None):
+    dict_with_features = _generate_aldebaran_dataset(files, window_block=window_block)
     df = pd.DataFrame(dict_with_features)
     df['features'] = df['features'].apply(lambda x : _flatten_features_dict(x))
     return df

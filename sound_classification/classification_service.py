@@ -40,7 +40,7 @@ class SoundClassification(object):
     and classify a new file
     """
 
-    def __init__(self, wav_file_list=None, clf = None, confidence_threshold=0.2):
+    def __init__(self, wav_file_list=None, clf = None, confidence_threshold=0.2, window_block_learning=None):
         """
 
         :param wav_file_list: , each files should be named  # TODO : replace that with a list of namedTuple (file, class) for example ?
@@ -61,9 +61,10 @@ class SoundClassification(object):
 
         self.clf = clf
         self.confidence_threshold = confidence_threshold
+        self.window_block_learning = window_block_learning
 
     def learn(self):
-        self.df = generate_aldebaran_dataset(self.wav_file_list, nfft=self.nfft)
+        self.df = generate_aldebaran_dataset(self.wav_file_list, nfft=self.nfft, window_block=self.window_block_learning)
         self._learning_data_X = self.to_sklearn_features.fit_transform(self.df)
         self._learning_data_Y = self.df.expected_class
 

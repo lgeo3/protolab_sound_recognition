@@ -9,6 +9,8 @@ from sklearn import preprocessing
 import sklearn.feature_extraction
 from collections import namedtuple
 
+from sound_processing.segmentaxis import segment_axis
+
 # TODO : it should works with a multichannel signal ?
 Cross_validation_split = namedtuple('cross_validation_split', ['X_training', 'X_testing', 'Y_training', 'Y_testing'])
 
@@ -46,12 +48,31 @@ def extract_mfcc_features(signal, win_len=0.0232, win_overlap=0.5, n_mel_bands=4
     features["var_second_diff"] = np.var(np.diff(res, axis=0, n=2), axis=0)
     return features
 
-def  extract_mfcc_features_one_channel(signal, **kwargs):
+def extract_mfcc_features_one_channel(signal, **kwargs):
+    """
+
+    :param signal:
+    :param kwargs:
+    this function a 'window_block' argument
+    :return: a list of features (if window_block is None, the list contains only one features entry)
+    """
+    window_block = kwargs.pop('window_block', None)
     if len(signal.shape)>1:
         signal_ = signal[:,0]
     else:
         signal_ = signal
-    return extract_mfcc_features(signal_, **kwargs)
+
+    if window_block is None:
+        block_size = signal.size
+    else:
+        block_size = min(window_block * kwargs['fs'], signal.size)
+    overlap = int(block_size) >> 1  # int(block_size / 2)
+
+    res = []
+    print kwargs
+    for num, s in enumerate(segment_axis(signal, block_size, overlap=overlap, end='cut')):
+        res.append(extract_mfcc_features(s, **kwargs))
+    return res
 
 
 def _flatten_features_dict(u):
@@ -89,7 +110,7 @@ def get_features(signal_chunck, nfft=1024, sklearn_dict_vectorizer = None, scale
     :param scaler: a sklearn preprocessing scaler fitted on training data, e.g scaler = preprocessing.StandardScaler().fit(data_X)
     :return: a feature vector
     """
-    features = extract_mfcc_features_one_channel(signal_chunck, nfft=nfft)
+    features = extract_mfcc_features_one_channel(signal_chunck, nfft=nfft, window_block=None)[0]  # TODO: uniformiser les appel car une liste c'est nul
     features = _flatten_features_dict(features) # flat
     if sklearn_dict_vectorizer is None:
         # we create a feature vectorizer
