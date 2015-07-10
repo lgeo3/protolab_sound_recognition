@@ -75,6 +75,13 @@ class SoundClassification(object):
 
         self.clf.fit(self._learning_data_X_scaled, self._learning_data_Y)
 
+    def _learn_calibration(self):
+        """
+        calibrate score/threshold in order to provide a high precision to the user
+        :return:
+        """
+        #self.calibration_threshold()
+
     def processed_signal(self, data=None, fs=48000., window_block=1.0):
         """
         :param data:
