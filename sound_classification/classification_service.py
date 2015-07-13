@@ -82,8 +82,11 @@ class SoundClassification(object):
         """
         #self.calibration_threshold()
 
-    def post_processed_score(self, confidence):
-        score = 0
+    def post_processed_score(self, confidence, class_predicted):
+        score = -1  # -1 => not used
+        if self.score_normalized_coefs:  # dict is not empty
+            if class_predicted in self.score_normalized_coefs:
+                score = confidence * self.score_normalized_coefs[class_predicted]
         return score
 
     def processed_signal(self, data=None, fs=48000., window_block=1.0):
