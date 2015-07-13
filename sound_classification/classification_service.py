@@ -19,7 +19,7 @@ from sound_processing.segmentaxis import segment_axis
 from sound_processing.features_extraction import get_features
 import sound_processing.io_sound
 
-ClassificationResult = namedtuple("ClassificationResult", ["timestamp_start", "timestamp_end", "class_predicted", "confidence"])
+ClassificationResult = namedtuple("ClassificationResult", ["timestamp_start", "timestamp_end", "class_predicted", "confidence", "score"])
 
 def get_confidence_prediction(clf, val):
     """
@@ -82,6 +82,10 @@ class SoundClassification(object):
         """
         #self.calibration_threshold()
 
+    def post_processed_score(self, confidence):
+        score = 0
+        return score
+
     def processed_signal(self, data=None, fs=48000., window_block=1.0):
         """
         :param data:
@@ -110,7 +114,8 @@ class SoundClassification(object):
                 timestamp_start = num * (block_size - overlap) / float(fs)
                 #print("timestamp_start is %s" % timestamp_start)
                 timestamp_end = timestamp_start + block_size / float(fs)
-                new_result = ClassificationResult(timestamp_start, timestamp_end, class_predicted, confidence)
+                score = self.post_processed_score(confidence)
+                new_result = ClassificationResult(timestamp_start, timestamp_end, class_predicted, confidence, score)
                 res.append(new_result)
         return res
 
