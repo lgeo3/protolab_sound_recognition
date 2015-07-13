@@ -2,6 +2,8 @@
 #!/usr/bin/env python
 
 from werkzeug.datastructures import FileStorage
+import time
+import datetime
 from flask_restful import fields, marshal_with, reqparse, Resource
 import hashlib
 import json
@@ -19,11 +21,15 @@ class SendSoundFile(Resource):
         self.saving_path="./data"
 
     def add_entry(self, data=None, content_classification='', device_type=None):
-        print("content_clas si : {}".format(content_classification))
+        print("content_clas is : {}".format(content_classification))
         sig = hashlib.sha1()
         for line in data.stream.read():
             sig.update(line)
-        filename = sig.hexdigest()
+        hash_ = sig.hexdigest()[:4]  # we keep only 5 values for the hash
+        ts = time.time()
+        readeable_timestamp =  datetime.datetime.fromtimestamp(ts).strftime('%Y_%m_%d-%H:%M:%S')
+        device_name = "{}".format(device_type)
+        filename = "_".join([readeable_timestamp, device_name, content_classification, hash_]) + '.wav'
 
         from api import SoundFile
         s = SoundFile(filename=filename, content_class=content_classification, mimetype=data.mimetype, device_type=device_type)
