@@ -96,6 +96,8 @@ class SoundClassification(object):
 
         if self.calibrate_score:
             self._learn_calibration()
+            print("confidence threshold are %s" % self.confidence_thresholds)
+            print("confidence coefficients are %s" % self.score_normalized_coefs)
 
     def _learn_calibration(self):
         """
@@ -143,7 +145,7 @@ class SoundClassification(object):
                                                                                  min_expected_cum_precision=self.min_expected_cum_precision)
 
         # computing coeficient to `normalized` based on threshold scores per class
-        self.score_normalized_coefs = {predicted_class: np.float64(0.9) / float(val) for predicted_class, val in
+        self.score_normalized_coefs = {predicted_class: 1. if val == 0 else 0.9 / float(val) for predicted_class, val in
                                        self.confidence_thresholds.iteritems()}
 
     def post_processed_score(self, confidence=None, class_predicted=None):
