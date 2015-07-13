@@ -42,8 +42,14 @@ def get_threshold_cum_precision(prediction_df, true_positive_class=None, min_exp
     """
     bins, precision_cumulative = compute_precision_cumulative_curve(prediction_df, true_positive_class=true_positive_class)
     valid_entry = np.argwhere(np.array(precision_cumulative) >= min_expected_cum_precision)[0]
+
     if valid_entry == []:
         return 1  # worst threshold..
-    else:
-        return bins[valid_entry[0]] # first position
+
+    threshold = bins[valid_entry[0]] # first position
+    if threshold == 0:
+        threshold = min(prediction_df.confidence[prediction_df.class_expected == prediction_df.class_predicted])
+    return threshold
+
+
 
