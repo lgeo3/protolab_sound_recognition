@@ -49,11 +49,11 @@ api.add_resource(ClassifySoundApi, '/api/ClassifySoundFile', '/api/ClassifiySoun
 if __name__ == '__main__':
     usage = "python api.py -p '/media/dataset/*.wav'"
     parser = argparse.ArgumentParser(description="usage is %s" % usage)
-    parser.add_argument('--wav-file-pattern', '-p', type=str, default="'/media/dataset/*.wav'")
+    parser.add_argument('--wav-files', '-w', type=str, required=True, nargs='+')
     args = parser.parse_args()
 
     print("args is %s" % args)
-    api.sound_classification_obj = SoundClassification(wav_file_list=args.wav_file_pattern)
+    api.sound_classification_obj = SoundClassification(wav_file_list=args.wav_files)
     api.sound_classification_obj.learn()
 
     app.run(debug=True, host='0.0.0.0')
