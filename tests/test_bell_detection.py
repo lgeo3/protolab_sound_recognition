@@ -1,9 +1,11 @@
 __author__ = 'lgeorge'
 
 import os
+import glob
 import subprocess
 
 from sound_classification import classification_service
+import pytest
 
 def test_classifier_simple():
     """
@@ -33,10 +35,12 @@ def _get_training_data():
     proc.wait()
     return os.path.abspath(dataset_path)
 
-def test_bell_detection():
+@pytest.mark.parametrize("enable_calibration_of_score", [(False), (True)])
+def test_bell_detection(enable_calibration_of_score):
     dataset_path = _get_training_data()
     file_regexp = os.path.join(dataset_path, '*.wav')
-    sound_classification_obj = classification_service.SoundClassification(wav_file_list=file_regexp)
+    files = glob.glob(file_regexp)
+    sound_classification_obj = classification_service.SoundClassification(wav_file_list=files, calibrate_score=enable_calibration_of_score)
     sound_classification_obj.learn()
     test_file_url = "https://www.dropbox.com/s/8dlr28s9gby46h1/bell_test.wav?dl=0"
     test_file = "test_bell.wav"
