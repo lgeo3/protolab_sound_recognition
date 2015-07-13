@@ -109,14 +109,14 @@ class SoundClassification(object):
         for num, signal in enumerate(segment_axis(data, block_size, overlap=overlap, end='cut')):
             preprocessed_features = get_features(signal, nfft=self.nfft, scaler=self.scaler)
             confidence = get_confidence_prediction(self.clf, preprocessed_features)
-            if confidence > self.confidence_threshold:
-                class_predicted = self.clf.predict(preprocessed_features)[0]   # [0] : as asked by Alex we return only class in string not an np.array
-                timestamp_start = num * (block_size - overlap) / float(fs)
-                #print("timestamp_start is %s" % timestamp_start)
-                timestamp_end = timestamp_start + block_size / float(fs)
-                score = self.post_processed_score(confidence)
-                new_result = ClassificationResult(timestamp_start, timestamp_end, class_predicted, confidence, score)
-                res.append(new_result)
+            #if confidence > self.confidence_threshold:
+            class_predicted = self.clf.predict(preprocessed_features)[0]   # [0] : as asked by Alex we return only class in string not an np.array
+            timestamp_start = num * (block_size - overlap) / float(fs)
+            #print("timestamp_start is %s" % timestamp_start)
+            timestamp_end = timestamp_start + block_size / float(fs)
+            score = self.post_processed_score(confidence)
+            new_result = ClassificationResult(timestamp_start, timestamp_end, class_predicted, confidence, score)
+            res.append(new_result)
         return res
 
     def processed_wav(self, filename, window_block=1.0, ignore_fs=False):
