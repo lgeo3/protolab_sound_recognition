@@ -76,7 +76,7 @@ class SoundClassification(object):
         self.calibrate_score = calibrate_score
         # initialized during learn :
         self.score_normalized_coefs = {}  # coefs to convert confidence into "normalized" score
-        self.min_expected_cum_precision = 0.99
+        self.min_expected_cum_precision = 1.0
         self.confidence_thresholds = {}  # threshold of score for each classifier in order to have `min_expected_cum_precision` for this class
 
         self.df = None
