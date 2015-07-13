@@ -49,7 +49,7 @@ class SoundClassification(object):
     """
 
     def __init__(self, wav_file_list=None, clf=None, confidence_threshold=0.2, window_block_learning=None,
-                 calibrate_score=False):
+                 calibrate_score=True):
         """
 
         :param wav_file_list: , each files should be named  # TODO : replace that with a list of namedTuple (file, class) for example ?
@@ -119,7 +119,7 @@ class SoundClassification(object):
             train_files = self.df.iloc[train_set].full_filename
             cloned_clf = sklearn.base.clone(self.clf)
             # we build a clone classifier service.. to do the learning on a fold..
-            new_classifier_service = self.__class__(wav_file_list=train_files, clf=cloned_clf, calibrate_score=False,
+            new_classifier_service = self.__class__(wav_file_list=train_files.tolist(), clf=cloned_clf, calibrate_score=False,
                                                     window_block_learning=self.window_block_learning)
             new_classifier_service.learn()
             for index in test_set:
@@ -129,21 +129,21 @@ class SoundClassification(object):
                     expected.extend([val.expected_class] * len(prediction))
                     predicted.extend(prediction)
                     # we append the num of fold to filename to have easy difference after that.
-                    filenames.extend(['_'.join([val.filename, '_fold%s' % fold_num])] * len(prediction))
+                    filenames.extend(['_'.join([val.file_name, '_fold%s' % fold_num])] * len(prediction))
                 except SoundClassificationException as e:
                     print("Exception {} detected on {}".format(e, val.full_filename))
             fold_num += 1
 
         predicted_class = [x.class_predicted for x in predicted]
         predicted_confidence = [x.confidence for x in predicted]
-        df = pd.DataFrame(zip(expected, predicted_class, predicted_confidence), columns=['expected_class', 'predicted_class', 'confidence'])
+        df = pd.DataFrame(zip(expected, predicted_class, predicted_confidence), columns=['class_expected', 'class_predicted', 'confidence'])
         for class_name in set(self.df.expected_class):
             self.confidence_thresholds[class_name] = get_threshold_cum_precision(df,
                                                                                  true_positive_class=class_name,
                                                                                  min_expected_cum_precision=self.min_expected_cum_precision)
 
         # computing coeficient to `normalized` based on threshold scores per class
-        self.score_normalized_coefs = {predicted_class: 0.9 / float(val) for predicted_class, val in
+        self.score_normalized_coefs = {predicted_class: np.float64(0.9) / float(val) for predicted_class, val in
                                        self.confidence_thresholds.iteritems()}
 
     def post_processed_score(self, confidence=None, class_predicted=None):
