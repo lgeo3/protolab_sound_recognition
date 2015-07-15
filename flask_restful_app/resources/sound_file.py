@@ -18,7 +18,7 @@ class SendSoundFile(Resource):
 
         self.db_session = db_session
         super(SendSoundFile, self).__init__()
-        self.saving_path="./data"
+        self.saving_path= "/tmp/data"
 
     def add_entry(self, data=None, content_classification='', device_type=None):
         print("content_clas is : {}".format(content_classification))
