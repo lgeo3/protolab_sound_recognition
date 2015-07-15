@@ -1,5 +1,5 @@
 __author__ = 'lgeorge'
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 setup(name='protolab_sound_recognition',
@@ -8,5 +8,6 @@ setup(name='protolab_sound_recognition',
       author='laurent george',
       author_email='lgeorge@aldebaran-robotics.com',
       license='MIT',
-      packages=['sound_processing', 'sound_classification', 'flask_restful_app'],
+      packages=find_packages(),
+      #packages=['sound_processing', 'sound_classification', 'flask_restful_app', 'flask_restful_app.common'],
       zip_safe=False)
