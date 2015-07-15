@@ -27,7 +27,7 @@ class SendSoundFile(Resource):
             sig.update(line)
         hash_ = sig.hexdigest()[:4]  # we keep only 5 values for the hash
         ts = time.time()
-        readeable_timestamp =  datetime.datetime.fromtimestamp(ts).strftime('%Y_%m_%d-%H:%M:%S')
+        readeable_timestamp =  datetime.datetime.fromtimestamp(ts).strftime('%Y_%m_%d-%Hh%Mm%S')
         device_name = "{}".format(device_type)
         filename = "_".join([readeable_timestamp, device_name, content_classification, hash_]) + '.wav'
 
