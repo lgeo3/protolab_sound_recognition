@@ -9,9 +9,4 @@ setup(name='protolab_sound_recognition',
       author_email='lgeorge@aldebaran-robotics.com',
       license='MIT',
       packages=['sound_processing', 'sound_classification', 'flask_restful_app'],
-      zip_safe=False,
-      install_requires=['scikits.audiolab',
-                        'scikit-learn',
-			'pandas',
-			'speech-features'
-])
+      zip_safe=False)
