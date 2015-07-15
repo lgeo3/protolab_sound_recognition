@@ -5,6 +5,7 @@ import glob
 import subprocess
 
 from sound_classification import classification_service
+from test_common import _get_training_data
 import pytest
 
 def test_classifier_simple():
@@ -15,25 +16,6 @@ def test_classifier_simple():
     sound_classification_obj = classification_service.SoundClassification()
     assert(True)
 
-def _get_training_data():
-    """
-    Download training data from public dropbox
-    :return: path of dataset
-    """
-    dataset_url = "https://www.dropbox.com/s/ekldjq8o1wfhcq1/dataset_aldebaran_6sounds.tar.gz?dl=0"
-    dataset_filename = os.path.join(os.path.abspath('.'), 'dataset_dl.tar.gz')
-    if not(os.path.isfile(dataset_filename)):
-        p = subprocess.Popen(['wget', dataset_url, '-O', dataset_filename])  # using wget simpler than urllib with droppox changing urlname in http response
-        p.wait()
-    dataset_path = 'dataset_learning'
-    p = subprocess.Popen(['mkdir', '-p', dataset_path])
-    p.wait()
-    command = ['tar', '-xvzf', dataset_filename, '-C', dataset_path, '--strip-components=1']
-    proc = subprocess.Popen(command,
-                        stdin=subprocess.PIPE,
-                        stdout=subprocess.PIPE)
-    proc.wait()
-    return os.path.abspath(dataset_path)
 
 @pytest.mark.parametrize("enable_calibration_of_score", [(False), (True)])
 def test_bell_detection(enable_calibration_of_score):
