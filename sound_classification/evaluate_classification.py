@@ -1,6 +1,6 @@
 __author__ = 'lgeorge'
 
-import seaborn as sns
+#import seaborn as sns
 import pylab
 import classification_service
 import numpy as np
@@ -39,7 +39,7 @@ def plot_distribution_true_false(prediction_df):
     #return pylab.gcf()
 
 
-def get_expected_predicted_stratified_fold(stratified_fold, df, window_block=None, clf=None, window_block_learning=None):
+def get_expected_predicted_stratified_fold(stratified_fold, df, window_block=None, clf=None, window_block_learning=None, calibrate_score=False):
     """
     Tool function to report classification accuracy for our classification tools
     """
@@ -50,13 +50,14 @@ def get_expected_predicted_stratified_fold(stratified_fold, df, window_block=Non
     fold_num = 0
     for train_set, test_set in stratified_fold:
         train_files = df.iloc[train_set].filename
-        sound_classification_obj = classification_service.SoundClassification(train_files.tolist(), clf=clf, window_block_learning=window_block_learning )
+        sound_classification_obj = classification_service.SoundClassification(train_files.tolist(), clf=clf, window_block_learning=window_block_learning , calibrate_score=calibrate_score)
         sound_classification_obj.learn()
         labels = sound_classification_obj.clf.classes_
         for index in test_set:
             val = df.iloc[index]
             try:
                 prediction = sound_classification_obj.processed_wav(val.filename, window_block=window_block, ignore_fs=True)
+                print(len(prediction))
                 expected.extend([val.classname]*len(prediction))
                 predicted.extend(prediction)
                 filenames.extend(['_'.join([val.filename, '_fold%s' % fold_num])]*len(prediction))  # we append the num of fold to filename to have easy difference after that.... TODO: use another column
@@ -78,11 +79,12 @@ def print_report(expected, predicted_class, labels, score_threshold_dict=None):
     print(matrix)
 
     # plot confusion matrix
-    sound_classification.confusion_matrix.displayConfusionMatrix(matrix, labels=labels)
+    fig = sound_classification.confusion_matrix.displayConfusionMatrix(matrix, labels=labels)
+    return fig
 
     # print report
-    import sklearn
-    print(sklearn.metrics.classification_report(expected, predicted_class))
+    #import sklearn
+    #print(sklearn.metrics.classification_report(expected, predicted_class))
 
 
 

@@ -16,7 +16,6 @@ def displayConfusionMatrix(aConfusion_matrix, labels=None):
 
     usage:  sklearn.metrics.confusion_matrix(Y, clf.predict(X))
     """
-    import pylab
 
     aConfusion_matrix = np.array(aConfusion_matrix)
     normalized_confusion_matrix = np.array(aConfusion_matrix.copy(), dtype=np.float)
@@ -30,7 +29,7 @@ def displayConfusionMatrix(aConfusion_matrix, labels=None):
 
     # colormap = pylab.cm.jet  # bad # colormap = pylab.cm.bwr  # ok
     colormap = pylab.cm.coolwarm  # seems to be good
-    cax = ax.matshow(normalized_confusion_matrix, cmap=colormap)
+    cax = ax.matshow(normalized_confusion_matrix, cmap=colormap, interpolation='None')
     ax.xaxis.set_label_position('top')
     if labels is not None:
         #ax.set_xticklabels([''] + labels)
@@ -39,16 +38,22 @@ def displayConfusionMatrix(aConfusion_matrix, labels=None):
         pylab.yticks(np.arange(len(labels)), [''] + labels)
     cb = fig.colorbar(cax)
     #cb.set_clim(0,1)
-    cb.solids.set_edgecolor("face")
+    #cb.solids.set_edgecolor("face")
     cb.set_label('Percentage')
 
     for i in range(normalized_confusion_matrix.shape[0]):
         for j in range(normalized_confusion_matrix.shape[1]):
-            cell = "{0:.2f}".format( normalized_confusion_matrix[i, j])
-            cell = ""
-            pylab.text(j - .2, i + .2, cell, fontsize=14)
+            val = aConfusion_matrix[i, j]
+            if val == 0:
+                cell = ""
+            else:
+                cell = "{0:.0f}".format( val )
+            #pylab.text(j - .2, i + .2, cell, fontsize=14,  va='center', ha='center')
+            pylab.text(j , i , cell, fontsize=14,  va='center', ha='center')
     pylab.xlabel('Predicted')
-    pylab.ylabel('True (Label)')
+    pylab.ylabel('Expected')
+    pylab.tight_layout()
+
     pylab.show()
     return fig
 

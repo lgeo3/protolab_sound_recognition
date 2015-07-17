@@ -32,7 +32,7 @@ class SendSoundFile(Resource):
         filename = "_".join([readeable_timestamp, device_name, content_classification, hash_]) + '.wav'
 
         from api import SoundFile
-        s = SoundFile(filename=filename, content_class=content_classification, mimetype=data.mimetype, device_type=device_type)
+        s = SoundFile(filename=filename, content_class=content_classification, mimetype=data.mmetype, device_type=device_type)
         self.db_session.add(s)
         self.db_session.commit()
         self.db_session.flush()
