@@ -4,38 +4,223 @@ import pytest
 import os
 import glob
 import subprocess
+import pandas
+import sklearn.metrics
+import numpy as np
+import json
+import unittest
+
 from test_common import _get_training_data
 from sound_classification import classification_service
+from sound_classification import evaluate_classification
 
-@pytest.mark.parametrize("enable_calibration_of_score", [(False), (True)])
-def test_multiple_detection(wav_file_url, csv_url, min_true_positive=1, max_false_positive=0, dataset_url=None, enable_calibration_of_score=False):
+def _convert_min_sec_to_sec(val):
     """
-    Success if the number of true positive detected on the file is above a threshold, and number of false positive under a threshold
 
-    :param wav_filename: url or filename
-    :param csv_filename: url or filename
-    :param min_true_positive: int
-    :param max_false_positive: int
+    :param val:  val is a string in format 'XmYsZ' like '0m5s3' meaning at secong 5,3
     :return:
+    >>> _convert_min_sec_to_sec('10m11s2')
+    611.2
     """
-    dataset_path = _get_training_data(dataset_url)
-    file_regexp = os.path.join(dataset_path, '*.wav')
-    files = glob.glob(file_regexp)
-    sound_classification_obj = classification_service.SoundClassification(wav_file_list=files, calibrate_score=enable_calibration_of_score)
-    sound_classification_obj.learn()
+    _min = val.split('m')[0]
+    _sec = val.split('m')[1].split('s')[0]
+    _dsec = val.split('s')[1]
 
-    test_file = "test.wav"
-    p = subprocess.Popen(['wget', wav_file_url, '-O', test_file])  # using wget simpler than urllib with droppox changing urlname in http response
-    p.wait()
-    test_file = os.path.abspath(test_file)
+    res =  int(_min) * 60 + int(_sec) + float(_dsec)/10.
+    return res
 
-    csv_file = "test.csv"
-    p = subprocess.Popen(['wget', csv_url, '-O', csv_file])  # using wget simpler than urllib with droppox changing urlname in http response
-    p.wait()
-    csv_file = os.path.abspath(csv_file)
+def load_csv_annotation(csv_file):
+    import pandas
+    df_expected = pandas.read_csv(csv_file)
+    df_expected['timestamp_start'] = df_expected['time begin'].apply(_convert_min_sec_to_sec)
+    df_expected['timestamp_end'] = df_expected['time end'].apply(_convert_min_sec_to_sec)
+    df_expected['class_expected'] = df_expected['name']
+    #df_expected[['class_expected', 'timestamp_start', 'timestamp_end']]
+    return df_expected
+
+
+def _overlap(a_start, a_stop, b_start, b_stop):
+    """
+    :param a_start:
+    :param a_stop:
+    :param b_start:
+    :param b_stop:
+    :return:
+    >>> _overlap(1, 5, 1.3, 2)
+    True
+    >>> _overlap(8, 9, 1.2, 2)
+    False
+    """
+    # thx stack overflow
+    overlap = max(0, min(a_stop, b_stop) - max(a_start, b_start))
+    return (overlap >0)
+
+
+def find_overlap(timestamps_1, timestamps_2):
+    """
+
+    :param timestamps_1: list of tuple (index, start, stop) with start and stop float values, stop >= start
+    :param timestamps_2: list of tuple (index, start, stop) with start and stop float values, stop >= start
+    :return:
+
+    >>> find_overlap([(0, 1, 5), (1, 8, 9), (2, 11, 30)], [(0, 1.3, 2), (1, 2.3, 4), (2, 7, 8.5)])
+    [(0, 0), (0, 1), (1, 2)]
+    """
+    associated = []
+    for (index_1, a_start, a_stop) in (timestamps_1):
+        for  (index_2, b_start, b_stop) in (timestamps_2):
+            if _overlap(a_start, a_stop, b_start, b_stop):
+                associated.append((index_1, index_2))
+    return associated
 
 
 
-    res = sound_classification_obj.processed_wav(test_file)
-    ## TODO assert deskbell is better than doorbell
-    assert('DeskBell' in set([x.class_predicted for x in res]))
+def compute_tp_fp(df, df_expected):
+    """
+    return {'false_positives': false_positives, 'true_positives':true_positives, 'not_detected': not_detected, 'silence_not_detected': silence_not_detected}
+    each elements correspond to a list of tuple, first item of tuple is equal to detection second item equal to expectation (i.e annotation)
+
+    Warning if for same index in expected we have multiple values in predicted.. we count them all
+    """
+    timestamps_1 = df[['timestamp_start', 'timestamp_end']].to_records()
+    timestamps_2 = df_expected[['timestamp_start', 'timestamp_end']].to_records()
+    overlaps_index = find_overlap(timestamps_1, timestamps_2)
+
+    index_expected_found = zip(*overlaps_index)[1]
+    index_df_found = zip(*overlaps_index)[0]
+
+    # for values
+    overlap_values = [(df.iloc[x], df_expected.iloc[y]) for (x, y) in overlaps_index]
+    false_positives = [(x, y) for (x, y) in overlap_values if x.class_predicted != y.class_expected]
+    true_positives = [(x, y)  for (x, y) in overlap_values if x.class_predicted == y.class_expected]
+
+    # TODO: if for the same song we detect multiple time the same classifier values.. we should maybee group them.. otherwise long song will get more points..
+    # TODO : think about it
+
+    # for silences.. :
+    not_detected = [(None, df_expected.iloc[index]) for index in df_expected.index if index not in index_expected_found]  # silence detected (i.e nothing detected) but it should be something
+    silence_not_detected = [(df.iloc[index], None) for index in df.index if index not in index_df_found]  # something detected but it should be a silence -> it's an errors
+
+    return {'false_positives': false_positives, 'true_positives':true_positives, 'not_detected': not_detected, 'silence_not_detected': silence_not_detected}
+
+
+def convert_tp_fp_to_confusion_matrix(true_positives, false_positives, not_detected, silence_not_detected):
+    """
+    Now we compute confusion matrix like list
+    :param true_positives:
+    :param false_positives:
+    :param not_detected:
+    :param silence_not_detected:
+    :return: expected_list, predicted_list, labels  which could easily be used with confusion matrix plot
+    """
+
+    expected_list, predicted_list, labels = [], [], set()
+    nothing_value = 'NOTHING'
+
+    for (predicted, expected) in true_positives + false_positives:
+        expected_list.append(expected.class_expected)
+        predicted_list.append(predicted.class_predicted)
+
+    # now we handle silences case :
+    #first when a silence is detected when there is something
+    for (_, expected) in not_detected:
+        expected_list.append(expected.class_expected)
+        predicted_list.append(nothing_value)
+
+    # second when a silence is detected as something
+    for (predicted, _) in silence_not_detected:
+        expected_list.append(nothing_value)
+        predicted_list.append(predicted.class_predicted)
+
+    labels = list(set(predicted_list).union(set(expected_list)))
+    return expected_list, predicted_list, labels
+
+
+class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls, dataset_url=None, wav_file_url=None):
+        cls.min_precision = 0.7
+        cls.min_recall = 0.7
+        cls.enable_calibration_of_score = True
+        cls.dataset_url = dataset_url
+        cls.dataset_path = _get_training_data(cls.dataset_url)
+        cls.file_regexp = os.path.join(cls.dataset_path, '*.wav')
+        cls.file_regexp_bis = os.path.join(cls.dataset_path, '*/*.wav')
+        cls.files = glob.glob(cls.file_regexp) + glob.glob(cls.file_regexp_bis)
+        cls.sound_classification_obj = classification_service.SoundClassification(wav_file_list=cls.files, calibrate_score=cls.enable_calibration_of_score)
+        cls.sound_classification_obj.learn()
+        cls.test_file = "test.wav"
+        if wav_file_url is None:
+            wav_file_url = 'https://www.dropbox.com/s/tcem6metr3ejp6y/2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.wav?dl=0'
+        cls.wav_file_url = wav_file_url
+        p = subprocess.Popen(['wget', cls.wav_file_url, '-O', cls.test_file])  # using wget simpler than urllib with droppox changing urlname in http response
+        p.wait()
+        cls.test_file = os.path.abspath(cls.test_file)
+        #cls.test_file = '/home/lgeorge/tests/2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.wav'
+
+        cls.csv_url = 'https://www.dropbox.com/s/umohtewtn6l5275/2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.csv?dl=0'
+        cls.csv_file = "test.csv"
+        p = subprocess.Popen(['wget', cls.csv_url, '-O', cls.csv_file])  # using wget simpler than urllib with droppox changing urlname in http response
+        p.wait()
+        cls.csv_file = os.path.abspath(cls.csv_file)
+
+        cls.res = cls.sound_classification_obj.processed_wav(cls.test_file)
+
+        cls.df = pandas.DataFrame([rec.__dict__ for rec in cls.res])
+        if cls.enable_calibration_of_score:
+            #df.class_predicted[df.score <= 0.9] = 'NOTHING'
+            cls.df = cls.df[cls.df.score >= 0.9] #we drop low score
+            cls.df = cls.df.reset_index(drop=True)
+        cls.df.to_csv('output.csv')  # just for later check if needed
+
+        cls.df_expected = load_csv_annotation(cls.csv_file)
+        cls.labels_present_in_wavfile = set(cls.df_expected.class_expected)
+
+        detection_dict = compute_tp_fp(cls.df, cls.df_expected)
+
+        #print("True positive count: {}".format(len(detection_dict['true_positives'])))
+        #print("False positive count: {}".format(len(detection_dict['false_positives'])))
+        #print("Silence detected as something: {}".format(len(detection_dict['silence_not_detected'])))
+        #print("Not detected count: {}".format(len(detection_dict['not_detected'])))
+
+        cls.expected, cls.predicted, cls.labels = convert_tp_fp_to_confusion_matrix(detection_dict['true_positives'], detection_dict['false_positives'], detection_dict['not_detected'], detection_dict['silence_not_detected'])
+        report = sklearn.metrics.classification_report(cls.expected, cls.predicted, labels=cls.labels, target_names=None, sample_weight=None, digits=2)
+        #res = evaluate_classification.print_report(expected, predicted, labels)
+        #res.savefig('confusion_mat.png')
+        #print(report)
+
+        cls.precisions = sklearn.metrics.precision_score(cls.expected, cls.predicted, labels=cls.labels, average=None)
+        cls.recalls = sklearn.metrics.recall_score(cls.expected, cls.predicted, labels=cls.labels, average=None)
+
+        cls.labels_to_consider = [l for l in cls.labels if l in cls.sound_classification_obj.clf.classes_]
+        cls.labels_to_ignore = [l for l in cls.labels if l not in cls.sound_classification_obj.clf.classes_]
+        cls.labels_to_consider_index = [num for (num, val) in enumerate(cls.labels) if val in cls.labels_to_consider]
+
+    def test_setup(self):
+        pass
+
+    def test_precision(self):
+        print("ignoring labels %s, not present in learning dataset" % str(self.labels_to_ignore))
+        for index in self.labels_to_consider_index:
+            if self.precisions[index] == 0 and self.labels[index] not in self.predicted:
+                self.precisions[index] = 1.  # MY precision comprhension
+        np.testing.assert_array_less(self.min_precision, self.precisions[self.labels_to_consider_index], "labels considered are {}, predicted are {}, expected are {}".format(self.labels_to_consider, self.predicted, self.expected))
+
+
+    def test_recall(self):
+        # for recall we also ignore labels not present in the test_wav_file
+        print("ignoring labels %s, not present in learning dataset" % str(self.labels_to_ignore))
+        print("considering only labels present in wavfile %s" % str(self.labels_present_in_wavfile))
+        labels_to_ignore = self.labels_to_ignore + [label for label in self.labels if label not in self.labels_present_in_wavfile]
+        labels_to_consider = [l for l in self.labels if l not in labels_to_ignore]
+        labels_to_consider_index = [num for (num, val) in enumerate(self.labels) if val in labels_to_consider]
+        # we use assert array less because it provide a pecent mismatch, easier to read.. it's equivalent to checking all values above min_recall
+        np.testing.assert_array_less(self.min_recall, self.recalls[labels_to_consider_index], "labels considered are {} predicted are {}, expected are {}".format(self.labels_to_consider, self.predicted, self.expected))
+
+
+class TestMultipleDetectionsWithCalibrationEuropythonDataset(TestMultipleDetectionsDefaultDatasetWithCalibration):
+    @classmethod
+    def setUpClass(cls):
+        dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
+        super(TestMultipleDetectionsWithCalibrationEuropythonDataset, cls).setUpClass(dataset_all_sound_europython)
+

@@ -34,8 +34,8 @@ def displayConfusionMatrix(aConfusion_matrix, labels=None):
     if labels is not None:
         #ax.set_xticklabels([''] + labels)
         #ax.set_yticklabels([''] + labels)
-        pylab.xticks(np.arange(len(labels)), [''] + labels, rotation=90)
-        pylab.yticks(np.arange(len(labels)), [''] + labels)
+        pylab.xticks(np.arange(len(labels)), labels, rotation=90)
+        pylab.yticks(np.arange(len(labels)), labels)
     cb = fig.colorbar(cax)
     #cb.set_clim(0,1)
     #cb.solids.set_edgecolor("face")
