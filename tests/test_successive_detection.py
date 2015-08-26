@@ -138,7 +138,7 @@ def convert_tp_fp_to_confusion_matrix(true_positives, false_positives, not_detec
 
 class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
     @classmethod
-    def setUpClass(cls, dataset_url=None, wav_file_url=None):
+    def setUpClass(cls, dataset_url=None, wav_file_url=None, csv_url=None):
         cls.min_precision = 0.7
         cls.min_recall = 0.7
         cls.enable_calibration_of_score = True
@@ -158,7 +158,9 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
         cls.test_file = os.path.abspath(cls.test_file)
         #cls.test_file = '/home/lgeorge/tests/2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.wav'
 
-        cls.csv_url = 'https://www.dropbox.com/s/umohtewtn6l5275/2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.csv?dl=0'
+        if csv_url is None:
+            csv_url = 'https://www.dropbox.com/s/umohtewtn6l5275/2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.csv?dl=0'
+        cls.csv_url = csv_url
         cls.csv_file = "test.csv"
         p = subprocess.Popen(['wget', cls.csv_url, '-O', cls.csv_file])  # using wget simpler than urllib with droppox changing urlname in http response
         p.wait()
@@ -169,7 +171,7 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
         cls.df = pandas.DataFrame([rec.__dict__ for rec in cls.res])
         if cls.enable_calibration_of_score:
             #df.class_predicted[df.score <= 0.9] = 'NOTHING'
-            cls.df = cls.df[cls.df.score >= 0.9] #we drop low score
+            cls.df = cls.df[cls.df.score >= 2.5] #we drop low score
             cls.df = cls.df.reset_index(drop=True)
         cls.df.to_csv('output.csv')  # just for later check if needed
 
@@ -205,6 +207,7 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
             if self.precisions[index] == 0 and self.labels[index] not in self.predicted:
                 self.precisions[index] = 1.  # MY precision comprhension
         np.testing.assert_array_less(self.min_precision, self.precisions[self.labels_to_consider_index], "labels considered are {}, predicted are {}, expected are {}".format(self.labels_to_consider, self.predicted, self.expected))
+        assert(len(self.predicted) > 0)
 
 
     def test_recall(self):
@@ -223,4 +226,11 @@ class TestMultipleDetectionsWithCalibrationEuropythonDataset(TestMultipleDetecti
     def setUpClass(cls):
         dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
         super(TestMultipleDetectionsWithCalibrationEuropythonDataset, cls).setUpClass(dataset_all_sound_europython)
+
+class TestMultipleDetectionsWithCalibrationEuropythonDatasetSimpleBell(TestMultipleDetectionsDefaultDatasetWithCalibration):
+    @classmethod
+    def setUpClass(cls):
+        simple_sound = "https://www.dropbox.com/s/8dlr28s9gby46h1/bell_test.wav?dl=0"
+        simple_bell_sound_csv = 'https://www.dropbox.com/s/hvjyvmexq8gn8r0/bell.csv?dl=0'
+        super(TestMultipleDetectionsWithCalibrationEuropythonDatasetSimpleBell, cls).setUpClass(wav_file_url=simple_sound, csv_url=simple_bell_sound_csv)
 
