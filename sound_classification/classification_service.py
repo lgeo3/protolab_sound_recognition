@@ -53,6 +53,7 @@ class SoundClassification(object):
         if clf is None:
             # TODO : try with linearSVC .. and one vs all
             clf = sklearn.svm.SVC(kernel='rbf', probability=True, verbose=False)
+        print("CLF is %s" % clf)
         self.to_sklearn_features = DataFrameMapper([('features', sklearn.feature_extraction.DictVectorizer())])
         self.scaler = None  # init during learn
         self.wav_file_list = wav_file_list

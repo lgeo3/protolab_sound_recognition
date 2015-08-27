@@ -48,28 +48,30 @@ def extract_mfcc_features(signal, win_len=0.0232, win_overlap=0.5, n_mel_bands=4
     features["var_second_diff"] = np.var(np.diff(res, axis=0, n=2), axis=0)
     return features
 
-def extract_mfcc_features_one_channel(signal, **kwargs):
+def extract_mfcc_features_one_channel(signal, window_block=None, **kwargs):
     """
 
     :param signal:
+    :param window_block: a float, if used the signal is segmented in multiple window
     :param kwargs:
     this function a 'window_block' argument
     :return: a list of features (if window_block is None, the list contains only one features entry)
     """
-    window_block = kwargs.pop('window_block', None)
+    #window_block = kwargs.pop('window_block', None)
     if len(signal.shape)>1:
-        signal_ = signal[:,0]
+        signal = signal[:,0]
     else:
-        signal_ = signal
+        signal = signal
 
     if window_block is None:
         block_size = signal.size
+        overlap = 0.
     else:
         block_size = min(window_block * kwargs['fs'], signal.size)
-    overlap = int(block_size) >> 1  # int(block_size / 2)
+        overlap = int(block_size / 2) #1  # int(block_size / 2)
 
     res = []
-    print kwargs
+
     for num, s in enumerate(segment_axis(signal, block_size, overlap=overlap, end='cut')):
         res.append(extract_mfcc_features(s, **kwargs))
     return res

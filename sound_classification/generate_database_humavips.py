@@ -44,7 +44,7 @@ def _generate_aldebaran_dataset(files, nfft=1024, expected_fs=48000, window_bloc
                 print("warning file %s, wrong fs %s, using it.. please remove the file if you don't want" % (f, fs))
                 #continue
 
-            for frame_feature in extract_mfcc_features_one_channel(signal, nfft=nfft, window_block=window_block):
+            for frame_feature in extract_mfcc_features_one_channel(signal, nfft=nfft, window_block=window_block, fs=fs):
                 data['features'] = frame_feature
                 res.append(data)
         except Exception as e:
