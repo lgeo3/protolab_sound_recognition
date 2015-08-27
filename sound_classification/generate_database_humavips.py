@@ -38,6 +38,7 @@ def _generate_aldebaran_dataset(files, nfft=1024, expected_fs=48000, window_bloc
         try:
             data = {}
             data['file_path'], data['file_name'] = os.path.split(f)
+            data['full_filename'] = f
             data['expected_class'] = data['file_name'].split('-')[0]
             signal, fs = load_sound(f)
             if fs!=expected_fs:
