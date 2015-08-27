@@ -15,3 +15,11 @@ def load_sound(filename):
     data = f.read_frames(f.nframes, dtype=np.float64)
     return data, f.samplerate
 
+def duration(filename):
+    """
+    return duration of wav file in second
+    :param filename:
+    :return:
+    """
+    f = Sndfile(filename, 'r')
+    return f.nframes / float(f.samplerate)
