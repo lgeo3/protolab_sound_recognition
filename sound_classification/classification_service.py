@@ -99,6 +99,7 @@ class SoundClassification(object):
             if confidence > self.confidence_threshold:
                 class_predicted = self.clf.predict(preprocessed_features)[0]   # [0] : as asked by Alex we return only class in string not an np.array
                 timestamp_start = num * (block_size - overlap) / float(fs)
+                #print("timestamp_start is %s" % timestamp_start)
                 timestamp_end = timestamp_start + block_size / float(fs)
                 new_result = ClassificationResult(timestamp_start, timestamp_end, class_predicted, confidence)
                 res.append(new_result)
