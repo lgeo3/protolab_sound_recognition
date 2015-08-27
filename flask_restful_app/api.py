@@ -12,6 +12,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from resources.sound_file import SendSoundFile
 from resources.classify_sounds import ClassifySoundApi
 import argparse
+import pickle
 
 from sound_classification.classification_service import SoundClassification
 
@@ -50,10 +51,24 @@ if __name__ == '__main__':
     usage = "python api.py -p '/media/dataset/*.wav'"
     parser = argparse.ArgumentParser(description="usage is %s" % usage)
     parser.add_argument('--wav-files', '-w', type=str, required=True, nargs='+')
+    parser.add_argument('--pickle-file', '-l', type=str, default=None)
+    parser.add_argument('--pickle-out-file', '-o', type=str, default='/tmp/classif.pickle')
+
     args = parser.parse_args()
 
     print("args is %s" % args)
-    api.sound_classification_obj = SoundClassification(wav_file_list=args.wav_files)
-    api.sound_classification_obj.learn()
+    if args.pickle_file is None:
+        api.sound_classification_obj = SoundClassification(wav_file_list=args.wav_files)
+        api.sound_classification_obj.learn()
+    else:
+        with open(args.pickle_file, 'r') as pickle_file:
+            print('loading classifier from file')
+            api.sound_classification_obj = pickle.load(pickle_file)
+            print('classifier loaded')
 
     app.run(debug=True, host='0.0.0.0', use_reloader=False)
+    print("quitting")
+
+    with open(args.pickle_out_file, 'w') as out_pickle_file:
+        print('saving classifier to %s' % args.pickle_out_file)
+        pickle.dump(api.sound_classification_obj, out_pickle_file)
