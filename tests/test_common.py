@@ -21,3 +21,11 @@ def _get_training_data(dataset_url=None):
                             stdout=subprocess.PIPE)
     proc.wait()
     return os.path.abspath(dataset_path)
+
+
+def wget_file(url):
+    filename = os.path.abspath(url.split('/')[-1])
+    if not(os.path.isfile(filename)):
+        p = subprocess.Popen(['wget', url, '-O', filename])  # using wget simpler than urllib with droppox changing urlname in http response
+        p.wait()
+    return filename
