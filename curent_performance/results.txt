@@ -1,0 +1,193 @@
+. tests/test_bell_detection.py::test_classifier_simple
+. tests/test_bell_detection.py::test_bell_detection[False]
+. tests/test_bell_detection.py::test_bell_detection[True]
+. tests/test_flask_resful_app.py::FlaskrTestCase::test_empty
+. tests/test_speed_performance.py::TestSpeed::test_speed
+. tests/test_successive_detection.py::TestMultipleDetectionsDefaultDatasetWithCalibration::test_precision
+F tests/test_successive_detection.py::TestMultipleDetectionsDefaultDatasetWithCalibration::test_recall
+ self = <tests.test_successive_detection.TestMultipleDetectionsDefaultDatasetWithCalibration testMethod=test_recall>
+ 
+     def test_recall(self):
+         # for recall we also ignore labels not present in the test_wav_file
+         print("ignoring labels %s, not present in learning dataset" % str(self.labels_to_ignore))
+         print("considering only labels present in wavfile %s" % str(self.labels_present_in_wavfile))
+         labels_to_ignore = self.labels_to_ignore + [label for label in self.labels if label not in self.labels_present_in_wavfile]
+         labels_to_consider = [l for l in self.labels if l not in labels_to_ignore]
+         labels_to_consider_index = [num for (num, val) in enumerate(self.labels) if val in labels_to_consider]
+         # we use assert array less because it provide a pecent mismatch, easier to read.. it's equivalent to checking all values above min_recall
+ >       np.testing.assert_array_less(self.min_recall, self.recalls[labels_to_consider_index], "labels considered are {} predicted are {}, expected are {}".format(self.labels_to_consider, self.predicted, self.expected))
+ 
+ tests/test_successive_detection.py:256: 
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+ /home/lgeorge/anaconda/lib/python2.7/site-packages/numpy/testing/utils.py:913: in assert_array_less
+     header='Arrays are not less-ordered')
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+ 
+ comparison = <built-in function __lt__>, x = array(0.7), y = array([ 1. ,  0. ,  0. ,  0.4])
+ err_msg = "labels considered are ['FireAlarmFr', 'TacTac', 'DoorBell01', 'DeskBell'] predicted are ['DeskBell', 'FireAlarmFr', '...', 'FakeSneeze', 'DoorBell01', 'ToyMaracas', 'ToyPig', 'ShutDoor', 'ToyGiraffe', 'ToyChicken', 'DeskBell', 'ClapHand']", verbose = True
+ header = 'Arrays are not less-ordered', precision = 6
+ 
+     def assert_array_compare(comparison, x, y, err_msg='', verbose=True,
+                              header='', precision=6):
+         from numpy.core import array, isnan, isinf, any, all, inf
+         x = array(x, copy=False, subok=True)
+         y = array(y, copy=False, subok=True)
+     
+         def isnumber(x):
+             return x.dtype.char in '?bhilqpBHILQPefdgFDG'
+     
+         def chk_same_position(x_id, y_id, hasval='nan'):
+             """Handling nan/inf: check that x and y have the nan/inf at the same
+             locations."""
+             try:
+                 assert_array_equal(x_id, y_id)
+             except AssertionError:
+                 msg = build_err_msg([x, y],
+                                     err_msg + '\nx and y %s location mismatch:' \
+                                     % (hasval), verbose=verbose, header=header,
+                                     names=('x', 'y'), precision=precision)
+                 raise AssertionError(msg)
+     
+         try:
+             cond = (x.shape==() or y.shape==()) or x.shape == y.shape
+             if not cond:
+                 msg = build_err_msg([x, y],
+                                     err_msg
+                                     + '\n(shapes %s, %s mismatch)' % (x.shape,
+                                                                       y.shape),
+                                     verbose=verbose, header=header,
+                                     names=('x', 'y'), precision=precision)
+                 if not cond :
+                     raise AssertionError(msg)
+     
+             if isnumber(x) and isnumber(y):
+                 x_isnan, y_isnan = isnan(x), isnan(y)
+                 x_isinf, y_isinf = isinf(x), isinf(y)
+     
+                 # Validate that the special values are in the same place
+                 if any(x_isnan) or any(y_isnan):
+                     chk_same_position(x_isnan, y_isnan, hasval='nan')
+                 if any(x_isinf) or any(y_isinf):
+                     # Check +inf and -inf separately, since they are different
+                     chk_same_position(x == +inf, y == +inf, hasval='+inf')
+                     chk_same_position(x == -inf, y == -inf, hasval='-inf')
+     
+                 # Combine all the special values
+                 x_id, y_id = x_isnan, y_isnan
+                 x_id |= x_isinf
+                 y_id |= y_isinf
+     
+                 # Only do the comparison if actual values are left
+                 if all(x_id):
+                     return
+     
+                 if any(x_id):
+                     val = comparison(x[~x_id], y[~y_id])
+                 else:
+                     val = comparison(x, y)
+             else:
+                 val = comparison(x, y)
+     
+             if isinstance(val, bool):
+                 cond = val
+                 reduced = [0]
+             else:
+                 reduced = val.ravel()
+                 cond = reduced.all()
+                 reduced = reduced.tolist()
+             if not cond:
+                 match = 100-100.0*reduced.count(1)/len(reduced)
+                 msg = build_err_msg([x, y],
+                                     err_msg
+                                     + '\n(mismatch %s%%)' % (match,),
+                                     verbose=verbose, header=header,
+                                     names=('x', 'y'), precision=precision)
+                 if not cond :
+ >                   raise AssertionError(msg)
+ E                   AssertionError: 
+ E                   Arrays are not less-ordered
+ E                   labels considered are ['FireAlarmFr', 'TacTac', 'DoorBell01', 'DeskBell'] predicted are ['DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING'], expected are ['DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'BlowNose', 'ClapHand', 'ClapHand', 'DoorBell01', 'FakeSneeze', 'HumanCaressHead', 'HumanScratchHead', 'HumanTapHead', 'Laugh', 'NoisePaper', 'RobotNoiseMoving', 'RobotNoisePushed', 'SmokeDetector', 'ShutDoor', 'ShutDoor', '(Opening a door)', 'ShutDoor', 'TacTac', 'ToyGiraffe', 'ToyMaracas', 'ToyPig', 'ClapHand', 'DoorBell01', 'FakeSneeze', '(romeo speaking)', 'HumanCaressHead', 'HumanScratchHead', 'HumanTapHead', 'Laugh', 'NoisePaper', 'RobotNoiseMoving', 'RobotNoisePushed', 'ShutDoor', '(opening a door)', 'ShutDoor', 'ShutDoor', 'ShutDoor', 'SmokeDetector', 'TacTac', 'ToyPig', 'ToyMaracas', 'ToyGiraffe', 'ToyChicken', 'DeskBell', 'DoorBell01', 'ToyPig', 'ToyGiraffe', 'ToyMaracas', 'ToyPig', 'ToyChicken', 'DeskBell', 'FakeSneeze', 'DoorBell01', 'ToyMaracas', 'ToyPig', 'ShutDoor', 'ToyGiraffe', 'ToyChicken', 'DeskBell', 'ClapHand']
+ E                   (mismatch 75.0%)
+ E                    x: array(0.7)
+ E                    y: array([ 1. ,  0. ,  0. ,  0.4])
+ 
+ /home/lgeorge/anaconda/lib/python2.7/site-packages/numpy/testing/utils.py:665: AssertionError
+. tests/test_successive_detection.py::TestMultipleDetectionsDefaultDatasetWithCalibration::test_setup
+E tests/test_successive_detection.py::TestMultipleDetectionsWithCalibrationEuropythonDatasetFull::test_precision
+ cls = <class 'tests.test_successive_detection.TestMultipleDetectionsWithCalibrationEuropythonDatasetFull'>
+ 
+     @classmethod
+     def setUpClass(cls):
+         dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
+ >       super(TestMultipleDetectionsWithCalibrationEuropythonDatasetFull, cls).setUpClass(dataset_all_sound_europython)
+ 
+ tests/test_successive_detection.py:264: 
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+ tests/test_successive_detection.py:198: in setUpClass
+     cls.sound_classification_obj.learn()
+ sound_classification/classification_service.py:87: in learn
+     window_block=self.window_block_learning)
+ sound_classification/generate_database_humavips.py:64: in generate_aldebaran_dataset
+     dict_with_features = _generate_aldebaran_dataset(files, window_block=window_block)
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+ 
+ files = [], nfft = 1024, expected_fs = 48000, window_block = None
+ 
+     def _generate_aldebaran_dataset(files, nfft=1024, expected_fs=48000, window_block=None):
+ >       assert(files!=[])
+ E       assert [] != []
+ 
+ sound_classification/generate_database_humavips.py:33: AssertionError
+E tests/test_successive_detection.py::TestMultipleDetectionsWithCalibrationEuropythonDatasetFull::test_recall
+ cls = <class 'tests.test_successive_detection.TestMultipleDetectionsWithCalibrationEuropythonDatasetFull'>
+ 
+     @classmethod
+     def setUpClass(cls):
+         dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
+ >       super(TestMultipleDetectionsWithCalibrationEuropythonDatasetFull, cls).setUpClass(dataset_all_sound_europython)
+ 
+ tests/test_successive_detection.py:264: 
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+ tests/test_successive_detection.py:198: in setUpClass
+     cls.sound_classification_obj.learn()
+ sound_classification/classification_service.py:87: in learn
+     window_block=self.window_block_learning)
+ sound_classification/generate_database_humavips.py:64: in generate_aldebaran_dataset
+     dict_with_features = _generate_aldebaran_dataset(files, window_block=window_block)
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+ 
+ files = [], nfft = 1024, expected_fs = 48000, window_block = None
+ 
+     def _generate_aldebaran_dataset(files, nfft=1024, expected_fs=48000, window_block=None):
+ >       assert(files!=[])
+ E       assert [] != []
+ 
+ sound_classification/generate_database_humavips.py:33: AssertionError
+E tests/test_successive_detection.py::TestMultipleDetectionsWithCalibrationEuropythonDatasetFull::test_setup
+ cls = <class 'tests.test_successive_detection.TestMultipleDetectionsWithCalibrationEuropythonDatasetFull'>
+ 
+     @classmethod
+     def setUpClass(cls):
+         dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
+ >       super(TestMultipleDetectionsWithCalibrationEuropythonDatasetFull, cls).setUpClass(dataset_all_sound_europython)
+ 
+ tests/test_successive_detection.py:264: 
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+ tests/test_successive_detection.py:198: in setUpClass
+     cls.sound_classification_obj.learn()
+ sound_classification/classification_service.py:87: in learn
+     window_block=self.window_block_learning)
+ sound_classification/generate_database_humavips.py:64: in generate_aldebaran_dataset
+     dict_with_features = _generate_aldebaran_dataset(files, window_block=window_block)
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+ 
+ files = [], nfft = 1024, expected_fs = 48000, window_block = None
+ 
+     def _generate_aldebaran_dataset(files, nfft=1024, expected_fs=48000, window_block=None):
+ >       assert(files!=[])
+ E       assert [] != []
+ 
+ sound_classification/generate_database_humavips.py:33: AssertionError
+. tests/test_successive_detection.py::TestMultipleDetectionsWithCalibrationEuropythonDatasetSimpleBell::test_precision
+. tests/test_successive_detection.py::TestMultipleDetectionsWithCalibrationEuropythonDatasetSimpleBell::test_recall
+. tests/test_successive_detection.py::TestMultipleDetectionsWithCalibrationEuropythonDatasetSimpleBell::test_setup

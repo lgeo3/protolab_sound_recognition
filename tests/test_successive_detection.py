@@ -9,6 +9,7 @@ import sklearn.metrics
 import numpy as np
 import json
 import unittest
+import pprint
 
 from test_common import _get_training_data, wget_file
 from sound_classification import classification_service
@@ -215,9 +216,13 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
 
         cls.expected, cls.predicted, cls.labels = convert_tp_fp_to_confusion_matrix(detection_dict['true_positives'], detection_dict['false_positives'], detection_dict['not_detected'], detection_dict['silence_not_detected'])
         report = sklearn.metrics.classification_report(cls.expected, cls.predicted, labels=cls.labels, target_names=None, sample_weight=None, digits=2)
-        #res = evaluate_classification.print_report(expected, predicted, labels)
+        matrix = sklearn.metrics.confusion_matrix(cls.expected, cls.predicted, cls.labels)
+        print("Confusion Matrix")
+        pprint.pprint(matrix)
+
         #res.savefig('confusion_mat.png')
-        #print(report)
+        print(report)
+
 
         cls.precisions = sklearn.metrics.precision_score(cls.expected, cls.predicted, labels=cls.labels, average=None)
         cls.recalls = sklearn.metrics.recall_score(cls.expected, cls.predicted, labels=cls.labels, average=None)
@@ -249,6 +254,7 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
         labels_to_consider_index = [num for (num, val) in enumerate(self.labels) if val in labels_to_consider]
         # we use assert array less because it provide a pecent mismatch, easier to read.. it's equivalent to checking all values above min_recall
         np.testing.assert_array_less(self.min_recall, self.recalls[labels_to_consider_index], "labels considered are {} predicted are {}, expected are {}".format(self.labels_to_consider, self.predicted, self.expected))
+
 
 
 class TestMultipleDetectionsWithCalibrationEuropythonDatasetFull(TestMultipleDetectionsDefaultDatasetWithCalibration):

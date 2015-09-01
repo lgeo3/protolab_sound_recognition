@@ -76,8 +76,6 @@ def filter_out_based_on_threshold(prediction_df, score_threshold_dict):
 def print_report(expected, predicted_class, labels, score_threshold_dict=None):
     # compute confusion matrix
     matrix = confusion_matrix(expected, predicted_class, labels=labels)
-    print(matrix)
-
     # plot confusion matrix
     fig = sound_classification.confusion_matrix.displayConfusionMatrix(matrix, labels=labels)
     return fig
