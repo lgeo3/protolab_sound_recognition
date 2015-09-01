@@ -10,8 +10,7 @@ def _get_training_data(dataset_url=None):
         dataset_url = "https://www.dropbox.com/s/ekldjq8o1wfhcq1/dataset_aldebaran_6sounds.tar.gz?dl=0"
     dataset_filename = os.path.join(os.path.abspath('.'), dataset_url.split('/')[-1])
     if not(os.path.isfile(dataset_filename)):
-        p = subprocess.Popen(['wget', dataset_url, '-O', dataset_filename])  # using wget simpler than urllib with droppox changing urlname in http response
-        p.wait()
+        dataset_filename = wget_file(dataset_url)
     dataset_path = dataset_filename + '_directory'
     p = subprocess.Popen(['mkdir', '-p', dataset_path])
     p.wait()
@@ -26,6 +25,6 @@ def _get_training_data(dataset_url=None):
 def wget_file(url):
     filename = os.path.abspath(url.split('/')[-1])
     if not(os.path.isfile(filename)):
-        p = subprocess.Popen(['wget', url, '-O', filename])  # using wget simpler than urllib with droppox changing urlname in http response
+        p = subprocess.Popen(['wget', '-nv', url, '-O', filename])  # using wget simpler than urllib with droppox changing urlname in http response
         p.wait()
     return filename

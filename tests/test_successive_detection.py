@@ -10,7 +10,7 @@ import numpy as np
 import json
 import unittest
 
-from test_common import _get_training_data
+from test_common import _get_training_data, wget_file
 from sound_classification import classification_service
 from sound_classification import evaluate_classification
 
@@ -153,17 +153,14 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
         if wav_file_url is None:
             wav_file_url = 'https://www.dropbox.com/s/tcem6metr3ejp6y/2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.wav?dl=0'
         cls.wav_file_url = wav_file_url
-        p = subprocess.Popen(['wget', cls.wav_file_url, '-O', cls.test_file])  # using wget simpler than urllib with droppox changing urlname in http response
-        p.wait()
+        cls.test_file = wget_file(cls.wav_file_url)
         cls.test_file = os.path.abspath(cls.test_file)
         #cls.test_file = '/home/lgeorge/tests/2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.wav'
 
         if csv_url is None:
             csv_url = 'https://www.dropbox.com/s/umohtewtn6l5275/2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.csv?dl=0'
         cls.csv_url = csv_url
-        cls.csv_file = "test.csv"
-        p = subprocess.Popen(['wget', cls.csv_url, '-O', cls.csv_file])  # using wget simpler than urllib with droppox changing urlname in http response
-        p.wait()
+        cls.csv_file = wget_file(cls.csv_url)
         cls.csv_file = os.path.abspath(cls.csv_file)
 
         cls.res = cls.sound_classification_obj.processed_wav(cls.test_file)
