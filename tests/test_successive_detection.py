@@ -25,8 +25,10 @@ def _convert_min_sec_to_sec(val):
     _min = val.split('m')[0]
     _sec = val.split('m')[1].split('s')[0]
     _dsec = val.split('s')[1]
+    if len(_dsec) == 1:
+        _dsec =  _dsec + '0'
 
-    res =  int(_min) * 60 + int(_sec) + float(_dsec)/10.
+    res =  int(_min) * 60 + int(_sec) + float(_dsec)/100.
     return res
 
 def load_csv_annotation(csv_file):
@@ -136,6 +138,34 @@ def convert_tp_fp_to_confusion_matrix(true_positives, false_positives, not_detec
     return expected_list, predicted_list, labels
 
 
+def generate_html5(output_html_fname, df, wav_file_url):
+    from flask import Flask, render_template
+
+    annotation_tuples = []
+    for index, row in df.iterrows():
+        text = []
+        if 'class_expected' in row:
+            text.append('expected:')
+            text.append(row.class_expected)
+
+        if 'class_predicted' in row:
+            text.append('predicted:')
+            text.append(row.class_predicted)
+
+        val = {'text':str(text), 'start':row.timestamp_start, 'end':row.timestamp_end}
+        annotation_tuples.append(val)
+
+
+    #annotation_tuples = [{'text':'5 to 15', 'start':'5', 'end':'15'}, {'text':'text 2 to 3 BELL', 'start':'10.0', 'end':'30.0'}]
+    app = Flask(__name__)
+    with app.app_context():
+        output_text =  render_template('index.html', annotations=annotation_tuples, wav_file_url=wav_file_url)
+
+    with open(output_html_fname, 'w') as f:
+        f.write(output_text)
+
+
+
 class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
     @classmethod
     def setUpClass(cls, dataset_url=None, wav_file_url=None, csv_url=None):
@@ -148,7 +178,6 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
         cls.file_regexp_bis = os.path.join(cls.dataset_path, '*/*.wav')
         cls.files = glob.glob(cls.file_regexp) + glob.glob(cls.file_regexp_bis)
         cls.sound_classification_obj = classification_service.SoundClassification(wav_file_list=cls.files, calibrate_score=cls.enable_calibration_of_score)
-        cls.sound_classification_obj.learn()
         cls.test_file = "test.wav"
         if wav_file_url is None:
             wav_file_url = 'https://www.dropbox.com/s/tcem6metr3ejp6y/2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.wav?dl=0'
@@ -161,8 +190,11 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
             csv_url = 'https://www.dropbox.com/s/umohtewtn6l5275/2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.csv?dl=0'
         cls.csv_url = csv_url
         cls.csv_file = wget_file(cls.csv_url)
+        cls.df_expected = load_csv_annotation(cls.csv_file)
+
         cls.csv_file = os.path.abspath(cls.csv_file)
 
+        cls.sound_classification_obj.learn()
         cls.res = cls.sound_classification_obj.processed_wav(cls.test_file)
 
         cls.df = pandas.DataFrame([rec.__dict__ for rec in cls.res])
@@ -172,7 +204,6 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
             cls.df = cls.df.reset_index(drop=True)
         cls.df.to_csv('output.csv')  # just for later check if needed
 
-        cls.df_expected = load_csv_annotation(cls.csv_file)
         cls.labels_present_in_wavfile = set(cls.df_expected.class_expected)
 
         detection_dict = compute_tp_fp(cls.df, cls.df_expected)
@@ -194,6 +225,8 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
         cls.labels_to_consider = [l for l in cls.labels if l in cls.sound_classification_obj.clf.classes_]
         cls.labels_to_ignore = [l for l in cls.labels if l not in cls.sound_classification_obj.clf.classes_]
         cls.labels_to_consider_index = [num for (num, val) in enumerate(cls.labels) if val in cls.labels_to_consider]
+
+        generate_html5('debug_predicted.html', cls.df, "http://127.0.0.1/out.mp3")
 
     def test_setup(self):
         pass
@@ -218,11 +251,11 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
         np.testing.assert_array_less(self.min_recall, self.recalls[labels_to_consider_index], "labels considered are {} predicted are {}, expected are {}".format(self.labels_to_consider, self.predicted, self.expected))
 
 
-class TestMultipleDetectionsWithCalibrationEuropythonDataset(TestMultipleDetectionsDefaultDatasetWithCalibration):
+class TestMultipleDetectionsWithCalibrationEuropythonDatasetFull(TestMultipleDetectionsDefaultDatasetWithCalibration):
     @classmethod
     def setUpClass(cls):
         dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
-        super(TestMultipleDetectionsWithCalibrationEuropythonDataset, cls).setUpClass(dataset_all_sound_europython)
+        super(TestMultipleDetectionsWithCalibrationEuropythonDatasetFull, cls).setUpClass(dataset_all_sound_europython)
 
 class TestMultipleDetectionsWithCalibrationEuropythonDatasetSimpleBell(TestMultipleDetectionsDefaultDatasetWithCalibration):
     @classmethod
@@ -231,3 +264,14 @@ class TestMultipleDetectionsWithCalibrationEuropythonDatasetSimpleBell(TestMulti
         simple_bell_sound_csv = 'https://www.dropbox.com/s/hvjyvmexq8gn8r0/bell.csv?dl=0'
         super(TestMultipleDetectionsWithCalibrationEuropythonDatasetSimpleBell, cls).setUpClass(wav_file_url=simple_sound, csv_url=simple_bell_sound_csv)
 
+def main():
+    csv_file = '2015_07_13-10h38m15s101111ms_Juliette__full_test_calm.csv?dl=0'
+    wav_file_url = "http://127.0.0.1/out.mp3"
+    df = load_csv_annotation(csv_file)
+    generate_html5('debug.html', df, wav_file_url)
+
+    import unittest
+    unittest.main()
+
+#if __name__ == "__main__":
+    #main()
