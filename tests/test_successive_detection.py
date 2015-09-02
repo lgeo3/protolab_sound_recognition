@@ -231,7 +231,6 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
         cls.labels_to_ignore = [l for l in cls.labels if l not in cls.sound_classification_obj.clf.classes_]
         cls.labels_to_consider_index = [num for (num, val) in enumerate(cls.labels) if val in cls.labels_to_consider]
 
-        generate_html5('debug_predicted.html', cls.df, "http://127.0.0.1/out.mp3")
 
     def test_setup(self):
         pass
