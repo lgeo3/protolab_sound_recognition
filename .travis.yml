@@ -41,4 +41,4 @@ install:
     - python setup.py develop --user
 
 script:
-    - "nosetests -w tests/ -v"
+    - "py.test tests"
