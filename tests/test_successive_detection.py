@@ -169,6 +169,7 @@ def generate_html5(output_html_fname, df, wav_file_url):
 
 class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
     @classmethod
+    @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
     def setUpClass(cls, dataset_url=None, wav_file_url=None, csv_url=None):
         cls.min_precision = 0.7
         cls.min_recall = 0.7
@@ -231,10 +232,11 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
         cls.labels_to_ignore = [l for l in cls.labels if l not in cls.sound_classification_obj.clf.classes_]
         cls.labels_to_consider_index = [num for (num, val) in enumerate(cls.labels) if val in cls.labels_to_consider]
 
-
+    @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
     def test_setup(self):
         pass
 
+    @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
     def test_precision(self):
         print("ignoring labels %s, not present in learning dataset" % str(self.labels_to_ignore))
         for index in self.labels_to_consider_index:
@@ -243,7 +245,7 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
         np.testing.assert_array_less(self.min_precision, self.precisions[self.labels_to_consider_index], "labels considered are {}, predicted are {}, expected are {}".format(self.labels_to_consider, self.predicted, self.expected))
         assert(len(self.predicted) > 0)
 
-
+    @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
     def test_recall(self):
         # for recall we also ignore labels not present in the test_wav_file
         print("ignoring labels %s, not present in learning dataset" % str(self.labels_to_ignore))
@@ -258,12 +260,14 @@ class TestMultipleDetectionsDefaultDatasetWithCalibration(unittest.TestCase):
 
 class TestMultipleDetectionsWithCalibrationEuropythonDatasetFull(TestMultipleDetectionsDefaultDatasetWithCalibration):
     @classmethod
+    @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
     def setUpClass(cls):
         dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
         super(TestMultipleDetectionsWithCalibrationEuropythonDatasetFull, cls).setUpClass(dataset_all_sound_europython)
 
 class TestMultipleDetectionsWithCalibrationEuropythonDatasetSimpleBell(TestMultipleDetectionsDefaultDatasetWithCalibration):
     @classmethod
+    @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
     def setUpClass(cls):
         simple_sound = "https://www.dropbox.com/s/8dlr28s9gby46h1/bell_test.wav?dl=0"
         simple_bell_sound_csv = 'https://www.dropbox.com/s/hvjyvmexq8gn8r0/bell.csv?dl=0'
