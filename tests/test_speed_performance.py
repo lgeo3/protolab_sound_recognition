@@ -27,5 +27,10 @@ class TestSpeed(unittest.TestCase):
         self.res = self.sound_classification_obj.processed_wav(self.wav_file)
         duration = time.time() - start_time
         max_duration = self.wav_duration / max_duration_factor
+        print("DURATION for processing wav file of %s IS %s" % (self.wav_duration, duration))
+        print("Max duration accepted for 8x speed is %s" % max_duration)
         assert(duration < max_duration)
 
+
+if __name__ == "__main__":
+    unittest.main()
