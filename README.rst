@@ -38,7 +38,7 @@ In order to check that the installation is correct you can run the following tes
 
 .. code::
 
-    py.test recognition_application/tests/test_bell_detection.py
+    py.test tests/test_bell_detection.py
 
 Usage:
 =======
