@@ -59,7 +59,10 @@ To facilitate the usage of the sound_recognition module there is a flask applica
 .. code:: bash
 
 	mkdir data
-	python flask_restful_app/api.py -p "path_to_the_sound_dataset/*.wav"
+	python flask_restful_app/api.py -w "path_to_the_sound_dataset/*.wav"
+        eg for the complete sound dataset with 21 subfolders:
+        python flask_restful_app/api.py -w "path_to_the_sound_dataset/*/*.wav"
+
 
 where "path_to_the_sound_dataset\/*.wav" contains your dataset wav file.
 
