@@ -7,6 +7,7 @@
 F tests/test_successive_detection.py::TestMultipleDetectionsDefaultDatasetWithCalibration::test_recall
  self = <tests.test_successive_detection.TestMultipleDetectionsDefaultDatasetWithCalibration testMethod=test_recall>
  
+     @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
      def test_recall(self):
          # for recall we also ignore labels not present in the test_wav_file
          print("ignoring labels %s, not present in learning dataset" % str(self.labels_to_ignore))
@@ -17,14 +18,14 @@ F tests/test_successive_detection.py::TestMultipleDetectionsDefaultDatasetWithCa
          # we use assert array less because it provide a pecent mismatch, easier to read.. it's equivalent to checking all values above min_recall
  >       np.testing.assert_array_less(self.min_recall, self.recalls[labels_to_consider_index], "labels considered are {} predicted are {}, expected are {}".format(self.labels_to_consider, self.predicted, self.expected))
  
- tests/test_successive_detection.py:256: 
+ tests/test_successive_detection.py:257: 
  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
  /home/lgeorge/anaconda/lib/python2.7/site-packages/numpy/testing/utils.py:913: in assert_array_less
      header='Arrays are not less-ordered')
  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
  
- comparison = <built-in function __lt__>, x = array(0.7), y = array([ 1. ,  0. ,  0. ,  0.4])
- err_msg = "labels considered are ['FireAlarmFr', 'TacTac', 'DoorBell01', 'DeskBell'] predicted are ['DeskBell', 'FireAlarmFr', '...', 'FakeSneeze', 'DoorBell01', 'ToyMaracas', 'ToyPig', 'ShutDoor', 'ToyGiraffe', 'ToyChicken', 'DeskBell', 'ClapHand']", verbose = True
+ comparison = <built-in function __lt__>, x = array(0.7), y = array([ 1.,  0.,  0.,  1.])
+ err_msg = "labels considered are ['FireAlarmFr', 'TacTac', 'DoorBell01', 'DeskBell'] predicted are ['DeskBell', 'FireAlarmFr', '... 'ToyChicken', 'FakeSneeze', 'DoorBell01', 'ToyMaracas', 'ToyPig', 'ShutDoor', 'ToyGiraffe', 'ToyChicken', 'ClapHand']", verbose = True
  header = 'Arrays are not less-ordered', precision = 6
  
      def assert_array_compare(comparison, x, y, err_msg='', verbose=True,
@@ -106,10 +107,10 @@ F tests/test_successive_detection.py::TestMultipleDetectionsDefaultDatasetWithCa
  >                   raise AssertionError(msg)
  E                   AssertionError: 
  E                   Arrays are not less-ordered
- E                   labels considered are ['FireAlarmFr', 'TacTac', 'DoorBell01', 'DeskBell'] predicted are ['DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING'], expected are ['DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'BlowNose', 'ClapHand', 'ClapHand', 'DoorBell01', 'FakeSneeze', 'HumanCaressHead', 'HumanScratchHead', 'HumanTapHead', 'Laugh', 'NoisePaper', 'RobotNoiseMoving', 'RobotNoisePushed', 'SmokeDetector', 'ShutDoor', 'ShutDoor', '(Opening a door)', 'ShutDoor', 'TacTac', 'ToyGiraffe', 'ToyMaracas', 'ToyPig', 'ClapHand', 'DoorBell01', 'FakeSneeze', '(romeo speaking)', 'HumanCaressHead', 'HumanScratchHead', 'HumanTapHead', 'Laugh', 'NoisePaper', 'RobotNoiseMoving', 'RobotNoisePushed', 'ShutDoor', '(opening a door)', 'ShutDoor', 'ShutDoor', 'ShutDoor', 'SmokeDetector', 'TacTac', 'ToyPig', 'ToyMaracas', 'ToyGiraffe', 'ToyChicken', 'DeskBell', 'DoorBell01', 'ToyPig', 'ToyGiraffe', 'ToyMaracas', 'ToyPig', 'ToyChicken', 'DeskBell', 'FakeSneeze', 'DoorBell01', 'ToyMaracas', 'ToyPig', 'ShutDoor', 'ToyGiraffe', 'ToyChicken', 'DeskBell', 'ClapHand']
- E                   (mismatch 75.0%)
+ E                   labels considered are ['FireAlarmFr', 'TacTac', 'DoorBell01', 'DeskBell'] predicted are ['DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'DeskBell', 'DeskBell', 'DeskBell', 'DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING', 'NOTHING'], expected are ['DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'DeskBell', 'DeskBell', 'DeskBell', 'DeskBell', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'FireAlarmFr', 'BlowNose', 'ClapHand', 'ClapHand', 'DoorBell01', 'FakeSneeze', 'HumanCaressHead', 'HumanScratchHead', 'HumanTapHead', 'Laugh', 'NoisePaper', 'RobotNoiseMoving', 'RobotNoisePushed', 'SmokeDetector', 'ShutDoor', 'ShutDoor', '(Opening a door)', 'ShutDoor', 'TacTac', 'ToyGiraffe', 'ToyMaracas', 'ToyPig', 'ClapHand', 'DoorBell01', 'FakeSneeze', '(romeo speaking)', 'HumanCaressHead', 'HumanScratchHead', 'HumanTapHead', 'Laugh', 'NoisePaper', 'RobotNoiseMoving', 'RobotNoisePushed', 'ShutDoor', '(opening a door)', 'ShutDoor', 'ShutDoor', 'ShutDoor', 'SmokeDetector', 'TacTac', 'ToyPig', 'ToyMaracas', 'ToyGiraffe', 'ToyChicken', 'DoorBell01', 'ToyPig', 'ToyGiraffe', 'ToyMaracas', 'ToyPig', 'ToyChicken', 'FakeSneeze', 'DoorBell01', 'ToyMaracas', 'ToyPig', 'ShutDoor', 'ToyGiraffe', 'ToyChicken', 'ClapHand']
+ E                   (mismatch 50.0%)
  E                    x: array(0.7)
- E                    y: array([ 1. ,  0. ,  0. ,  0.4])
+ E                    y: array([ 1.,  0.,  0.,  1.])
  
  /home/lgeorge/anaconda/lib/python2.7/site-packages/numpy/testing/utils.py:665: AssertionError
 . tests/test_successive_detection.py::TestMultipleDetectionsDefaultDatasetWithCalibration::test_setup
@@ -117,13 +118,14 @@ E tests/test_successive_detection.py::TestMultipleDetectionsWithCalibrationEurop
  cls = <class 'tests.test_successive_detection.TestMultipleDetectionsWithCalibrationEuropythonDatasetFull'>
  
      @classmethod
+     @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
      def setUpClass(cls):
          dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
  >       super(TestMultipleDetectionsWithCalibrationEuropythonDatasetFull, cls).setUpClass(dataset_all_sound_europython)
  
- tests/test_successive_detection.py:264: 
+ tests/test_successive_detection.py:266: 
  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
- tests/test_successive_detection.py:198: in setUpClass
+ tests/test_successive_detection.py:199: in setUpClass
      cls.sound_classification_obj.learn()
  sound_classification/classification_service.py:87: in learn
      window_block=self.window_block_learning)
@@ -142,13 +144,40 @@ E tests/test_successive_detection.py::TestMultipleDetectionsWithCalibrationEurop
  cls = <class 'tests.test_successive_detection.TestMultipleDetectionsWithCalibrationEuropythonDatasetFull'>
  
      @classmethod
+     @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
      def setUpClass(cls):
          dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
  >       super(TestMultipleDetectionsWithCalibrationEuropythonDatasetFull, cls).setUpClass(dataset_all_sound_europython)
  
- tests/test_successive_detection.py:264: 
+ tests/test_successive_detection.py:266: 
  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
- tests/test_successive_detection.py:198: in setUpClass
+ tests/test_successive_detection.py:199: in setUpClass
+     cls.sound_classification_obj.learn()
+ sound_classification/classification_service.py:87: in learn
+     window_block=self.window_block_learning)
+ sound_classification/generate_database_humavips.py:64: in generate_aldebaran_dataset
+     dict_with_features = _generate_aldebaran_dataset(files, window_block=window_block)
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+ 
+ files = [], nfft = 1024, expected_fs = 48000, window_block = None
+ 
+     def _generate_aldebaran_dataset(files, nfft=1024, expected_fs=48000, window_block=None):
+ >       assert(files!=[])
+ E       assert [] != []
+ 
+ sound_classification/generate_database_humavips.py:33: AssertionError
+E tests/test_successive_detection.py::TestMultipleDetectionsWithCalibrationEuropythonDatasetFull::test_save_result
+ cls = <class 'tests.test_successive_detection.TestMultipleDetectionsWithCalibrationEuropythonDatasetFull'>
+ 
+     @classmethod
+     @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
+     def setUpClass(cls):
+         dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
+ >       super(TestMultipleDetectionsWithCalibrationEuropythonDatasetFull, cls).setUpClass(dataset_all_sound_europython)
+ 
+ tests/test_successive_detection.py:266: 
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+ tests/test_successive_detection.py:199: in setUpClass
      cls.sound_classification_obj.learn()
  sound_classification/classification_service.py:87: in learn
      window_block=self.window_block_learning)
@@ -167,13 +196,14 @@ E tests/test_successive_detection.py::TestMultipleDetectionsWithCalibrationEurop
  cls = <class 'tests.test_successive_detection.TestMultipleDetectionsWithCalibrationEuropythonDatasetFull'>
  
      @classmethod
+     @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
      def setUpClass(cls):
          dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
  >       super(TestMultipleDetectionsWithCalibrationEuropythonDatasetFull, cls).setUpClass(dataset_all_sound_europython)
  
- tests/test_successive_detection.py:264: 
+ tests/test_successive_detection.py:266: 
  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
- tests/test_successive_detection.py:198: in setUpClass
+ tests/test_successive_detection.py:199: in setUpClass
      cls.sound_classification_obj.learn()
  sound_classification/classification_service.py:87: in learn
      window_block=self.window_block_learning)

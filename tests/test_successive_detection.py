@@ -265,6 +265,15 @@ class TestMultipleDetectionsWithCalibrationEuropythonDatasetFull(TestMultipleDet
         dataset_all_sound_europython = "https://www.dropbox.com/s/8t427pyszfhkfm4/dataset_aldebaran_allsounds.tar.gz?dl=0"
         super(TestMultipleDetectionsWithCalibrationEuropythonDatasetFull, cls).setUpClass(dataset_all_sound_europython)
 
+    @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
+    def test_save_result(self):
+        precision_average = sklearn.metrics.precision_score(self.expected, self.predicted)
+        recall_average = sklearn.metrics.precision_score(self.expected, self.predicted)
+        print("Score of successive detection huge file using full dataset and calibration (i.e 'notre champion')")
+        print("Precision average: %s" % precision_average)
+        print("Recall average: %s" % recall_average)
+        assert(False)
+
 class TestMultipleDetectionsWithCalibrationEuropythonDatasetSimpleBell(TestMultipleDetectionsDefaultDatasetWithCalibration):
     @classmethod
     @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "True", "Skipping this test on Travis CI.")
