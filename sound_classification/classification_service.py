@@ -145,7 +145,7 @@ class SoundClassification(object):
                                                                                  min_expected_cum_precision=self.min_expected_cum_precision)
 
         # computing coeficient to `normalized` based on threshold scores per class
-        self.score_normalized_coefs = {predicted_class: 1. if val == 0 else 0.9 / float(val) for predicted_class, val in
+        self.score_normalized_coefs = {predicted_class: 1. if val == 0 else 1.0 / float(val) for predicted_class, val in
                                        self.confidence_thresholds.iteritems()}
 
     def post_processed_score(self, confidence=None, class_predicted=None):
