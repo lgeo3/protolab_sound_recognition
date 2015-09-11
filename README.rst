@@ -84,6 +84,30 @@ Then you have a running web app that you can access from python for example:
     r = requests.post(webservice_pageaddress, data=payload, files=files)
 
 
+The return value is a dictionary with keys *classif* and *filename*. Classif field contains a list of classification results, each items in the list is composed of [*timestamp_start*, *timestamp_stop*, *sound_type_detected*, *classifier_confidence*, *score confidence*]. The filename field corresponds to the name of file as it saved on the server (it is usefull to report a bug on a specific file for instance, so we can investigate on a specific sound).
+
+The score is a scaled value that allow you to know if you can be confident that a sound occurs: if score > 1 you can be confident.
+
+
+Here is an example of result:
+
+.. code:: python
+
+    import pprint
+    pprint.pprint(r)
+    {'classif': [[0.0, 1.0, 'RobotNoiseMoving', 0.2403505903474301, 0.49162620752883424],
+                 [0.5, 1.5, 'DeskBell', 0.6298477177974425, 5.001747617851262],
+                 [1.0, 2.0, 'DeskBell', 0.8441221425138888, 6.703343992828691],
+                 [1.5, 2.5, 'DeskBell', 0.902478142033486, 7.166760741571032],
+                 [2.0, 3.0, 'DeskBell', 0.6344029251674168, 5.037921437280603],
+                 [2.5, 3.5, 'RobotNoiseMoving', 0.18166274340036412, 0.3715828842280175],
+                 [3.0, 4.0, 'RobotNoiseMoving', 0.4039192099803734, 0.8261983840507637],
+                 [3.5, 4.5, 'ShutDoor', 0.1879766200859678, 0.30759810559522]],
+     'filename': '2015_09_11-10h57m26_ROBOT_unknown_2991.wav'}
+
+Here based on the score, we can be confident that there is a *DeskBell* sound between 0.5s and 3.0s. And if we need a more precise window, the highest detection is between 1.5s and 2.5s (i.e highest score).
+
+
 Using the module directly:
 ---------------------------
 
