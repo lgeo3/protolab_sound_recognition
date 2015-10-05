@@ -66,7 +66,7 @@ if __name__ == '__main__':
             api.sound_classification_obj = pickle.load(pickle_file)
             print('classifier loaded')
 
-    app.run(debug=True, host='0.0.0.0', use_reloader=False)
+    app.run(debug=False, host='0.0.0.0', use_reloader=False)
     print("quitting")
 
     with open(args.pickle_out_file, 'w') as out_pickle_file:
