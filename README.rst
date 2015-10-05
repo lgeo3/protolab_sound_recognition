@@ -70,7 +70,7 @@ Then you have a running web app that you can access from python for example:
 
 .. code:: python
 
-    import request
+    import requests
     wav_file = "example.wav"
     server_ip = "127.0.0.1"
     webservice_pageaddress = "http://%s:5000/api/ClassifySoundFile" % server_ip
