@@ -8,6 +8,7 @@ from flask_restful import fields, marshal_with, reqparse, Resource
 import hashlib
 import json
 import os
+import random
 
 class SendSoundFile(Resource):
     def __init__(self, db_session=None):
@@ -18,14 +19,14 @@ class SendSoundFile(Resource):
 
         self.db_session = db_session
         super(SendSoundFile, self).__init__()
-        self.saving_path= "/tmp/data"
+        self.saving_path= "/tmp/"
 
     def add_entry(self, data=None, content_classification='', device_type=None):
-        print("content_clas is : {}".format(content_classification))
+        #print("content_clas is : {}".format(content_classification))
         sig = hashlib.sha1()
         for line in data.stream.read():
             sig.update(line)
-        hash_ = sig.hexdigest()[:4]  # we keep only 5 values for the hash
+        hash_ = sig.hexdigest()[:4] + str(random.randint(1,100))  # we keep only 5 values for the hash
         ts = time.time()
         readeable_timestamp =  datetime.datetime.fromtimestamp(ts).strftime('%Y_%m_%d-%Hh%Mm%S')
         device_name = "{}".format(device_type)
