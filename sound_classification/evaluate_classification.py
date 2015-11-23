@@ -39,7 +39,7 @@ def plot_distribution_true_false(prediction_df):
     #return pylab.gcf()
 
 
-def get_expected_predicted_stratified_fold(stratified_fold, df, window_block=None, clf=None, window_block_learning=None, calibrate_score=False):
+def get_expected_predicted_stratified_fold(stratified_fold, df, window_block=None, clf=None, window_block_learning=None, calibrate_score=False, keep_first_slice_only=False):
     """
     Tool function to report classification accuracy for our classification tools
     """
@@ -57,10 +57,20 @@ def get_expected_predicted_stratified_fold(stratified_fold, df, window_block=Non
             val = df.iloc[index]
             try:
                 prediction = sound_classification_obj.processed_wav(val.filename, window_block=window_block, ignore_fs=True)
-                print(len(prediction))
-                expected.extend([val.classname]*len(prediction))
-                predicted.extend(prediction)
-                filenames.extend(['_'.join([val.filename, '_fold%s' % fold_num])]*len(prediction))  # we append the num of fold to filename to have easy difference after that.... TODO: use another column
+                #print(val.filename)
+		#if "FireAlarmFr-002-PepperLaurent.wav" in val.filename:
+		#    print("len of prediction for file %s is %s" % (val.filename, len(prediction)))
+                #    import pdb
+                #    pdb.set_trace()
+                if keep_first_slice_only:
+                    filenames.append(val.filename)
+                    predicted.append(prediction[0])
+                    expected.append(val.classname)
+                else:
+                    expected.extend([val.classname]*len(prediction))
+                    predicted.extend(prediction)
+                    filenames.extend(['_'.join([val.filename, '_fold%s' % fold_num])]*len(prediction))  # we append the num of fold to filename to have easy difference after that.... TODO: use another column
+                
             except classification_service.SoundClassificationException as e:
                 print("Exception %s detected on %s" % (e, val.filename))
         fold_num += 1
