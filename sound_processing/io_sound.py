@@ -23,3 +23,15 @@ def duration(filename):
     """
     f = Sndfile(filename, 'r')
     return f.nframes / float(f.samplerate)
+
+def wav_to_array(wav_fname):
+    """
+    convert wav fname to numpy 1d array (only first channel is kept)
+    """
+    data, fs = load_sound(wav_fname)
+    if len(data.shape) > 1:
+        data = data[:, 0]
+    return data, fs
+
+# split one big wav in segmented axis signal
+# TODO
