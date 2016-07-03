@@ -7,9 +7,30 @@ Sound event recognition using python
 The main objective of this project is to provide sound recognition for sound like door bell, phone ring, fire alarm, etc.
 It uses MFCC features and scikit-learn for sound classification.
 
+Installation (with docker):
+============================
 
-Installation:
-==============
+We provide a simple docker container to test the sound classification, to build the container:
+
+.. code:: bash
+
+  git clone https://github.com/laurent-george/protolab_sound_recognition.git
+  cd protolab_sound_recognition
+  docker build -t docker_protolab_sound_recognition  .
+
+To run the container, for example to get a jupyter running inside the container:
+
+.. code:: bash
+   
+  mkdir dataset  # put your wav file here
+   docker run -i -t -p 8888:8888 -v ${PWD}/dataset:/dataset -v ${PWD}/notebooks:/protolab_sound_recognition/notebooks docker_protolab_sound_recognition  bash -c "/opt/conda/bin/jupyter notebook --notebook-dir=/protolab_sound_recognition/notebooks --ip='*' --port=8888 --no-browser"
+
+
+
+
+Installation (without docker):
+===============================
+
 
 A first requirements is libsndfile. To install it:
 
